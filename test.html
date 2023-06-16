@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+<body>
+<h1>Forms and API</h1>
+
+    <form method="post" action="http://127.0.0.1:8001/verify_form" enctype="multipart/form-data">
+        <label for="fname">First Name</label>
+            <input type="text" name="fname" id="fname"/><br/><br/>
+
+    <label for="lname">Last Name</label>
+        <input type="text" name="lname" id="lname"/><br/><br/>
+
+        <input type="file" name="pic"><br/><br/>
+
+        <input type="submit" value="Send" />
+        
+    </form>
+
+</body>
+</html>
