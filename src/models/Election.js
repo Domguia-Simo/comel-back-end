@@ -1,11 +1,15 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-const electionSchema = new Schema({
+const electionSchema = new mongoose.Schema({
     title: { type: String, require: true },
     desc: { type: String, require: true },
     state_date:{ type: Date, require: true },
     end_date:{ type: Date, require: true },
+    status: {
+        type: Boolean,
+        default: true
+    },
     createdBy:{ type: String, require: true },
     createdAt: {
         type: Date,
