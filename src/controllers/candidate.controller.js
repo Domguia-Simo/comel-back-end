@@ -1,15 +1,17 @@
 const Candidate = require("../models/candidate");
 
 
-exports.addCadidate = async (req, res) => {
+exports.addCandidate = async (req, res) => {
     try {
         console.log(req.body)
         let candidateModel = {
             name: req.body.name,
             email: req.body.email,
-            desc: req.body.class,
-            phone: req.body.level,
-            class: req.body.candidate,
+            desc: req.body.desc,
+            phone: req.body.phone,
+            class: req.body.class,
+            election: req.body.election,
+            createdBy: ''
         }
         const existingCandidate = await Candidate.findOne({ 'email': candidateModel.email });
         if (existingCandidate) {
@@ -17,7 +19,7 @@ exports.addCadidate = async (req, res) => {
         }
         // if (voters) {
 
-        const candidate = new Candidate(newBody)
+        const candidate = new Candidate(candidateModel)
         await candidate.save()
             .then(async respond => {
                 console.log(respond)
@@ -37,8 +39,48 @@ exports.addCadidate = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
+exports.editCandidates = async (req, res) => {
+    try {
+        let id = req.body.id || req.params.id;
+        console.log(req.body)
+        let candidateModel = {
+            name: req.body.name,
+            email: req.body.email,
+            desc: req.body.desc,
+            phone: req.body.phone,
+            class: req.body.class,
+            election: req.body.election,
+            createdBy: ''
+        }
+        // if (voters) {
 
-exports.uploadPersoImage = async (req, res) => {
+        // const candidate = new Candidate(candidateModel)
+        await Candidate.findOneAndUpdate({ _id: id }, {
+            'name': candidateModel.name,
+            'email': candidateModel.email,
+            'desc': candidateModel.desc,
+            'phone': candidateModel.phone,
+            'class': candidateModel.class,
+        })
+            .then(async respond => {
+                console.log(respond)
+                return res.status(200).json({ message: "Candidate updated successfully" });
+            })
+            .catch(err => {
+                console.log(err)
+                return res.status(409).json({ message: 'check you connection' });
+            })
+
+
+        // } else {
+        //     return res.status(408).json({ message: 'Enter correct creatidential' });
+        // }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.uploadCandidateImage = async (req, res) => {
     const id = req.params.id;
     let imageFiles = req.files.images; // Assuming 'images' is the fieldname for the files
     console.log(imageFiles);
@@ -84,4 +126,15 @@ exports.uploadPersoImage = async (req, res) => {
         console.log(error);
         return res.status(500).send({ error: 'An error occurred while processing images.' });
     }
+};
+
+exports.deleteCandidate = async (req, res) => {
+    let id = req.body.id || req.params.id;
+    await Candidate.findByIdAndDelete(id)
+        .then((result) => {
+            return res.status(200).send({ message: 'Candidate deleted successfully' });
+        })
+        .catch((err) => {
+            return res.send({ message: "an error occur while deleting" })
+        })
 };
