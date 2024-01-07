@@ -57,17 +57,17 @@ exports.Votes = async (req, res) => {
                         await transporter.sendMail(mailOptions, (error, info) => {
                             if (error) {
                                 console.log(error);
-                                return res.status(409).json({ message: 'check you connection' });
+                                return res.status(409).json({ message: 'Check you connection' });
                             } else {
                                 console.log('Email sent: ' + info.response);
-                                return res.status(200).json({ message: "a mail have been send to you confrim it",status:true });
+                                return res.status(200).json({ message: "A mail have been send to you confrim it",status:true });
                             }
                         });
 
                     })
                     .catch(err => {
                         console.log(err)
-                        return res.status(409).json({ message: 'server error' });
+                        return res.status(409).json({ message: 'Server error' });
                     })
 
         } else {
@@ -83,41 +83,30 @@ exports.Votes = async (req, res) => {
 exports.validateVotes = async (req, res) => {
     try {
         console.log(req.body)
-        let voterModel = {
-            name: req.body.name,
-            code: req.body.code,
-            email: req.body.email,
-            class: req.body.class,
-            level: req.body.level,
-            candidate: req.body.candidate,
-        }
+        let {name ,email ,code ,classe} = req.body
+
         const voters = await Voter.findOne({
-            'name': voterModel.name,
-            'email': voterModel.email,
-            'class': voterModel.class,
-            'level': voterModel.level,
+            'name': name,
+            'email':email,
+            'class':classe,
         });
         if (voters) {
-            if (voters.status.toLowerCase() === 'voted') {
-                if (voters.verificationCode === voterModel.code) {
+                if (voters.verificationCode == code) {
                     voters.status = "VOTED";
                     await voters.save()
                         .then(async respond => {
                             console.log(respond)
-                            return res.status(200).json({ message: "you voted have be accepted" });
-
+                            return res.status(200).json({ message: "Vote register successfully" ,status:true });
                         })
                         .catch(err => {
-                            return res.status(409).json({ message: 'check you connection' });
+                            return res.status(409).json({ message: 'Check you connection' });
                         })
                 } else {
-                    return res.status(409).json({ message: 'Invalid code' });
+                    return res.status(409).json({ message: 'Invalid verification code' });
                 }
-            } else {
-                return res.status(409).json({ message: 'Invalid code' });
-            }
+
         } else {
-            return res.status(408).json({ message: 'Enter correct creatidential' });
+            return res.status(408).json({ message: 'Unauthorise to validate without first voting' });
         }
     } catch (error) {
         console.error(error);
