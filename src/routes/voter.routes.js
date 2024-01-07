@@ -5,7 +5,7 @@ const express = require("express")
 const router = express.Router()
 
 
-router.get("/votes", Votes)
+router.post("/votes", Votes)
 router.get("/validateVotes", validateVotes)
 router.get("/votesByAdmin", VotesByAdmin)
 
