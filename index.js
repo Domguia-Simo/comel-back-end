@@ -5,6 +5,7 @@ const cors = require('cors')
 
 const electionRoutes =  require('./src/routes/election.routes.js')
 const adminRoutes = require('./src/routes/admin.routes.js')
+const voterRoutes = require('./src/routes/voter.routes.js')
 
 var app = express();
 app.use(cors())
@@ -28,6 +29,7 @@ app.get("/",(req ,res)=>{
 
 app.use("/api/election",electionRoutes)
 app.use('/api/admin' ,adminRoutes)
+app.use('/api/voter' ,voterRoutes)
 
 app.get("*" ,(req ,res)=>{
     return res.send("Not found")
