@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 
 const electionRoutes =  require('./src/routes/election.routes.js')
+const adminRoutes = require('./src/routes/admin.routes.js')
 
 
 var app = express();
@@ -22,15 +23,16 @@ mongoose.connect(url)
 
 
 app.get("/",(req ,res)=>{
-    return res.send("Welcome to my node revision")
+    return res.send("Welcome to comel backend")
 })
 
+app.use("/api/election",electionRoutes)
+app.use('/api/admin' ,adminRoutes)
 
 app.get("*" ,(req ,res)=>{
     return res.send("Not found")
 })
 
-app.use("/api/election",electionRoutes)
 
 let server = app.listen(5000 ,()=>{
     console.log("Server running on port 5000")
