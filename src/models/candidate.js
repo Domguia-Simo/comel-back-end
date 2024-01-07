@@ -21,10 +21,6 @@ const candidateSchema = new Schema({
     },
     location: Object,
     createdBy:{ type: String, require: true },
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
 });
 
 const Candidate = mongoose.model('Candidate', candidateSchema);

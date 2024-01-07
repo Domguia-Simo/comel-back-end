@@ -1,6 +1,47 @@
 const Voter = require("../models/voter");
-const nodemailer = require('nodemailer')
+const nodemailer = require("nodemailer");
 
+exports.getVoters = async (req, res) => {
+    try {
+        const voter = await Voter.find();
+        return res.status(200).json({ voters: voter });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.getVoterByClass = async (req, res) => {
+    try {
+        let classes = req.body.classes
+        const voter = await Voter.find({ class: classes });
+        return res.status(200).json({ voters: voter });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.createVoter = async (req, res) => {
+    console.log(req.body)
+
+    const voter = {
+        name: req.body.name,
+        email: req.body.email,
+        phone: req.body.phone,
+        class: req.body.class,
+        level: req.body.level,
+    }
+    console.log(voter);
+
+    const newVoter = new Voter(voter)
+    newVoter.save()
+        .then((result) => {
+            return res.status(200).send(newVoter);
+        })
+        .catch((err) => {
+            console.log(err)
+            return res.status(500).json({ message: 'Server error' });
+        })
+};
 exports.Votes = async (req, res) => {
     try {
 
@@ -138,7 +179,7 @@ exports.VotesByAdmin = async (req, res) => {
             'level': voterModel.level,
         });
         if (voters) {
-            if (voters.status.toLowerCase() === 'voted') {
+            if (voters.status.toLowerCase() !== 'voted') {
                 voters.votes = votes;
                 voters.status = "VOTED";
                 await voters.save()

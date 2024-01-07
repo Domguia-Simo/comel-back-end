@@ -12,7 +12,8 @@ const voterSchema = new Schema({
     status: {
         type: String,
         enum: ['VOTED', 'NOT VOTED'],
-        require: true
+        require: true,
+        default: "NOT VOTED"
     },
     email: {
         type: String,
@@ -20,11 +21,10 @@ const voterSchema = new Schema({
         match: /.+\@.+\..+/, // Simple regex for email validation
         unique: true
     },
-    votes: { type: { VotesSchema }, require: true },
+    votes: { type: VotesSchema , require: true },
     verificationCode: { type: Number, require: true },
     verificationTime: { type: Number, require: true },
     class: { type: String, require: true },
-
     createdAt: {
         type: Date,
         default: Date.now,
