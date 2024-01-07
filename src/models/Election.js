@@ -4,11 +4,11 @@ const Schema = mongoose.Schema
 const electionSchema = new mongoose.Schema({
     title: { type: String, require: true },
     desc: { type: String, require: true },
-    state_date:{ type: Date, require: true },
-    end_date:{ type: Date, require: true },
+    stateDate:{ type: Date, require: true },
+    endDate:{ type: Date, require: true },
     status: {
         type: Boolean,
-        default: true
+        default: false
     },
     createdBy:{ type: String, require: true },
     createdAt: {

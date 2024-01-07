@@ -38,7 +38,7 @@ exports.addCadidate = async (req, res) => {
     }
 };
 
-export const uploadPersoImage = async (req, res) => {
+exports.uploadPersoImage = async (req, res) => {
     const id = req.params.id;
     let imageFiles = req.files.images; // Assuming 'images' is the fieldname for the files
     console.log(imageFiles);

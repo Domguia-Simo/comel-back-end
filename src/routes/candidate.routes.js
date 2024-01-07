@@ -5,6 +5,7 @@ const express = require("express")
 const router = express.Router()
 
 
-router.get("/votes", Votes);
+router.post("/addCadidate", addCadidate);
+router.put("/uploadPersoImage/:id", uploadPersoImage);
 
 module.exports = router;
