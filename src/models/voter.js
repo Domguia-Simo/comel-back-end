@@ -7,7 +7,7 @@ const VotesSchema = new Schema({
     doneAt: Object,
     approvedby: { type: String, require: true },
     name: { type: String, require: true },
-})
+}, { _id: false })
 
 const voterSchema = new Schema({
     name: { type: String, require: true },
@@ -15,7 +15,8 @@ const voterSchema = new Schema({
     status: {
         type: String,
         enum: ['VOTED', 'NOT VOTED'],
-        require: true
+        require: true,
+        default: "NOT VOTED"
     },
     email: {
         type: String,
@@ -23,7 +24,7 @@ const voterSchema = new Schema({
         match: /.+\@.+\..+/, // Simple regex for email validation
         unique: true
     },
-    votes: { type: { VotesSchema }, require: true },
+    votes: { type: VotesSchema , require: true },
     verificationCode: { type: Number, require: true },
     verificationTime: { type: Date, require: true },
     phone: { type: String, require: true },
@@ -34,10 +35,6 @@ const voterSchema = new Schema({
         default: Date.now,
     },
     location: Object,
-    createdAt: {
-        type: Date,
-        default: Date.now,
-    },
 });
 
 const Voter = mongoose.model('Voter', voterSchema);

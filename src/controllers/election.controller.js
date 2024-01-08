@@ -4,7 +4,7 @@ const Election = require("../models/Election");
 exports.getElections = async (req, res) => {
     try {
         const elections = await Election.find();
-        return res.status(200).json({ ele: elections });
+        return res.status(200).json({ election: elections });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error' });
