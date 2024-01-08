@@ -45,25 +45,26 @@ exports.createVoter = async (req, res) => {
     //         })
     // }
 
-    // const voters = await Voter.find({
-    //     'class': "B2B",
-    // });
-    // let votes = {
-    //     candidate: "659b46a46d17e014cb28ceb3",
-    //     doneOn: new Date,
-    //     approvedby: 'ONLINE',
-    // }
-    // for (let index = 6; index < 10; index++) {
-    //     const voter = voters[index];
-    //     voter.votes = votes
-    //     voter.status = "VOTED"
-    //     await voter.save()
-    //         .then(result => {
-    //             console.log("index" + index + "sAVE");
-    //         })
-    //         .catch(err => console.log(err));
+    const voters = await Voter.find();
+    let votes = {
+        candidate: "659b46a46d17e014cb28ceb3",
+        doneOn: new Date,
+        approvedby: 'ONLINE',
+    }
+    for (let index = 20; index < voters.length; index++) {
+        const voter = voters[index];
+        console.log(voter._id)
+        console.log(voter.name)
+        if(voter.votes)
+        voter.votes.election = '659b1e70d7a408d0cba7d535'
+        // voter.status = "VOTED"
+        await voter.save()
+            .then(result => {
+                console.log("index" + index + "sAVE");
+            })
+            .catch(err => console.log(err));
 
-    // }
+    }
     return res.status(200).send({ message: "Users created successfully" });
 };
 exports.Votes = async (req, res) => {

@@ -3,6 +3,7 @@ const Schema = mongoose.Schema
 
 const VotesSchema = new Schema({
     candidate: { type: String, require: true },
+    election: { type: String, require: true },
     doneOn: { type: String, require: true },
     approvedby: { type: String, require: true },
 },{_id:false})

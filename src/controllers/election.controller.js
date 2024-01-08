@@ -1,10 +1,29 @@
+const Candidate = require("../models/candidate");
 const Election = require("../models/Election");
+const Voter = require("../models/voter");
 
 
 exports.getElections = async (req, res) => {
     try {
         const elections = await Election.find();
         return res.status(200).json({ election: elections });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.electionResult = async (req, res) => {
+    try {
+        let id = req.body.id || req.params.id;
+        console.log(id)
+        const elections = await Election.findOne({ _id: id });
+        const candidates = await Candidate.find({ election: id });
+        const voters = await Voter.find({ "votes.election": id });
+        return res.status(200).json({
+            election: elections,
+            candidates: candidates,
+            voters: voters
+        });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error' });
@@ -87,7 +106,7 @@ exports.deleteElection = async (req, res) => {
     let id = req.body.id || req.params.id;
     await Election.findByIdAndDelete(id)
         .then((result) => {
-            return res.status(200).send({message:'Election deleted successfully'});
+            return res.status(200).send({ message: 'Election deleted successfully' });
         })
         .catch((err) => {
             return res.send({ message: "an error occur while deleting" })
