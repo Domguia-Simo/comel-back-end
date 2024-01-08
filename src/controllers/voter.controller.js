@@ -22,20 +22,29 @@ exports.getVoterByClass = async (req, res) => {
 };
 exports.createVoter = async (req, res) => {
     console.log(req.body)
+    let {name ,email ,classe ,candidate} = req.body
 
     const voter = {
-        name: req.body.name,
-        email: req.body.email,
-        phone: req.body.phone,
-        class: req.body.class,
-        level: req.body.level,
+        name: name,
+        email: email,
+        class: classe,
+        votes:{
+            candidate:candidate,
+            doneOn:Date.now(),
+            approvedby:'online'  
+        },
+        status:'VOTED'
     }
     console.log(voter);
+    let v = await Voter.findOne({email:email})
+        if(v != null){
+            return res.status(200).json({message:'User already voted'})
+        }
 
     const newVoter = new Voter(voter)
     newVoter.save()
         .then((result) => {
-            return res.status(200).send(newVoter);
+            return res.status(200).json({result:result});
         })
         .catch((err) => {
             console.log(err)
