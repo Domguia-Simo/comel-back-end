@@ -25,25 +25,7 @@ exports.getVoterByClass = async (req, res) => {
 };
 exports.createVoter = async (req, res) => {
     console.log(req.body)
-    // // console.log(voter);
-    // for (let index = 0; index < 10; index++) {
-    //     let voter = {
-    //         name: req.body.name + index,
-    //         email: req.body.email + index + '@gmail.com',
-    //         phone: req.body.phone,
-    //         class: req.body.class,
-    //         level: req.body.level,
-    //     }
-    //     const newVoter = new Voter(voter)
-    //     await newVoter.save()
-    //         .then((result) => {
-    //             console.log("save " ,index)
-    //         })
-    //         .catch((err) => {
-    //             console.log(err)
-    //             return res.status(500).json({ message: 'Server error' });
-    //         })
-    // }
+    let {name ,email ,classe ,candidate} = req.body
 
     const voters = await Voter.find();
     let votes = {
