@@ -6,6 +6,7 @@ const VotesSchema = new Schema({
     election: { type: String, require: true },
     doneOn: { type: String, require: true },
     approvedby: { type: String, require: true },
+    name: { type: String, require: true },
 },{_id:false})
 
 const voterSchema = new Schema({

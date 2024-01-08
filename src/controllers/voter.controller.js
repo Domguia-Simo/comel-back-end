@@ -1,5 +1,6 @@
 const Voter = require("../models/voter");
 const dotenv = require('dotenv');
+const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 const moment = require("moment");
 dotenv.config();
@@ -15,8 +16,10 @@ exports.getVoters = async (req, res) => {
 };
 exports.getVoterByClass = async (req, res) => {
     try {
-        let classes = req.body.classes
+        let classes = req.body.classes || req.params.classes
+        console.log(classes)
         const voter = await Voter.find({ class: classes });
+        console.log(voter)
         return res.status(200).json({ voters: voter });
     } catch (error) {
         console.error(error);
@@ -51,19 +54,25 @@ exports.createVoter = async (req, res) => {
 };
 exports.Votes = async (req, res) => {
     try {
-        console.log(req.body)
+        let { name,
+            email,
+            classe,
+            candidate,
+            token,
+            position,
+        } = req.body
         let voterModel = {
-            name: req.body.name,
-            email: req.body.email,
-            class: req.body.class,
-            level: req.body.level,
-            candidate: req.body.candidate,
+            name: name,
+            email: email,
+            class: classe,
+            candidate: candidate,
         }
         let votes = {
-            candidate: voterModel.candidate,
+            candidate: candidate,
             doneOn: new Date,
-            doneAt: '',
-            approvedby: 'ONLINE',
+            election: '659b1e70d7a408d0cba7d535',
+            doneAt: position,
+            // approvedby: 'ONLINE',
         }
         let verificationCode = ''
         for (let i = 0; i < 6; i++) {
@@ -71,50 +80,75 @@ exports.Votes = async (req, res) => {
             verificationCode += temp
         }
         const voters = await Voter.findOne({
-            'name': voterModel.name,
-            'email': voterModel.email,
-            'class': voterModel.class,
-            'level': voterModel.level,
+            'name': name,
+            'email': email,
+            'class': classe,
         });
-        console.log(votes)
+        // console.log(voters)
         if (voters) {
             if (voters.status.toLowerCase() !== 'voted') {
                 voters.votes = votes;
                 voters.verificationCode = verificationCode;
                 voters.verificationTime = new Date;
-                await voters.save()
-                    .then(async respond => {
-                        console.log(respond.name, ":", verificationCode)
-                        // Send the verification code to the user's email
-                        const transporter = nodemailer.createTransport({
-                            service: 'gmail',
-                            auth: {
-                                user: process.env.SENDER_EMAIL,
-                                pass: process.env.EMAIL_PASSWORD,
-                            },
-                        });
-                        const mailOptions = {
-                            from: process.env.SENDER_EMAIL,
-                            to: voterModel.email,
-                            subject: 'Welcome To AICS',
-                            // html: mailMessages('create-personnel', { randomPassword, name }),
-                            html: `<h1>Ander</h1>`,
-                            text: `Your verification code is ${verificationCode}`,
-                        };
-                        await transporter.sendMail(mailOptions, (error, info) => {
-                            if (error) {
-                                console.log(error);
-                                return res.status(409).json({ message: 'check you connection' });
-                            } else {
-                                console.log('Email sent: ' + info.response);
-                                return res.status(200).json({ message: "a mail have been send to you confrim it", status: true });
-                            }
-                        });
-                    })
-                    .catch(err => {
+                
+                if (token) {
+                    try {
+                        const decoded_user_payload = jwt.verify(token, 'mytoken');
+                        voters.votes.approvedby = decoded_user_payload.id
+                        voters.votes.name = decoded_user_payload.name
+                        voters.status = "VOTED";
+                        console.log(voters)
+                        await voters.save()
+                            .then(async respond => {
+                                console.log(respond)
+                                return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
+                            })
+                            .catch(err => {
+                                return res.status(408).json({ message: 'check you connection' });
+                            })
+                    } catch (err) {
                         console.log(err)
-                        return res.status(408).json({ message: 'check you connection' });
-                    })
+                        return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
+                    }
+                } else {
+                    voters.votes.approvedby = 'ONLINE'
+                    console.log(voters)
+                    await voters.save()
+                        .then(async respond => {
+                            console.log(respond.name, ":", verificationCode)
+                            // Send the verification code to the user's email
+                            const transporter = nodemailer.createTransport({
+                                service: 'gmail',
+                                auth: {
+                                    user: process.env.SENDER_EMAIL,
+                                    pass: process.env.EMAIL_PASSWORD,
+                                },
+                            });
+                            const mailOptions = {
+                                from: process.env.SENDER_EMAIL,
+                                to: voterModel.email,
+                                subject: 'Welcome To AICS',
+                                // html: mailMessages('create-personnel', { randomPassword, name }),
+                                html: `<h1>Ander</h1>`,
+                                text: `Your verification code is ${verificationCode}`,
+                            };
+                            await transporter.sendMail(mailOptions, (error, info) => {
+                                if (error) {
+                                    console.log(error);
+                                    return res.status(409).json({ message: 'check you connection' });
+                                } else {
+                                    console.log('Email sent: ' + info.response);
+                                    return res.status(200).json({ message: "a mail have been send to you confrim it", status: true });
+                                }
+                            });
+                        })
+                        .catch(err => {
+                            console.log(err)
+                            return res.status(408).json({ message: 'check you connection' });
+                        })
+                }
+
+                //
             } else {
                 return res.status(407).json({ message: 'already Voted' });
             }
@@ -165,7 +199,7 @@ exports.Votes = async (req, res) => {
             //     })
         }
     } catch (error) {
-        console.error(error);
+        console.log(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };

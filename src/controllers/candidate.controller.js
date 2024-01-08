@@ -1,6 +1,16 @@
 const Candidate = require("../models/candidate");
 
 
+exports.getCandidates = async (req, res) => {
+    try {
+        const candidates = await Candidate.find();
+        console.log(candidates)
+        return res.status(200).json({ candidates: candidates });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
 exports.addCandidate = async (req, res) => {
     try {
         console.log(req.body)

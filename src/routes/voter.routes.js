@@ -6,7 +6,7 @@ const router = express.Router()
 
 
 router.get("/getAllVoter", getVoters)
-router.post("/getVoterByClass", getVoterByClass)
+router.get("/getVoterByClass/:classes", getVoterByClass)
 router.post("/createVoter", createVoter)
 router.post("/votes", Votes)
 router.post("/validateVotes", validateVotes)
