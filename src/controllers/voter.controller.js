@@ -26,24 +26,27 @@ exports.getVoterByClass = async (req, res) => {
 exports.createVoter = async (req, res) => {
     console.log(req.body)
 
-    const voter = {
-        name: req.body.name,
-        email: req.body.email,
-        phone: req.body.phone,
-        class: req.body.class,
-        level: req.body.level,
-    }
-    console.log(voter);
 
-    const newVoter = new Voter(voter)
-    newVoter.save()
-        .then((result) => {
-            return res.status(200).send(newVoter);
-        })
-        .catch((err) => {
-            console.log(err)
-            return res.status(500).json({ message: 'Server error' });
-        })
+    // console.log(voter);
+    for (let index = 0; index < 10; index++) {
+        let voter = {
+            name: req.body.name + index,
+            email: req.body.email + index + '@gmail.com',
+            phone: req.body.phone,
+            class: req.body.class,
+            level: req.body.level,
+        }
+        const newVoter = new Voter(voter)
+        await newVoter.save()
+            .then((result) => {
+                console.log("save " ,index)
+            })
+            .catch((err) => {
+                console.log(err)
+                return res.status(500).json({ message: 'Server error' });
+            })
+    }
+    return res.status(200).send({message:"Users created successfully"});
 };
 exports.Votes = async (req, res) => {
     try {
@@ -83,7 +86,7 @@ exports.Votes = async (req, res) => {
                 voters.verificationTime = new Date;
                 await voters.save()
                     .then(async respond => {
-                        console.log(respond.name,":", verificationCode)
+                        console.log(respond.name, ":", verificationCode)
                         return res.status(200).json({ message: "a mail have been send to you confrim it" });
                         // // Send the verification code to the user's email
                         // const transporter = nodemailer.createTransport({
