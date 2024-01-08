@@ -8,14 +8,14 @@ const adminRoutes = require('./src/routes/admin.routes.js')
 const voterRoutes = require('./src/routes/voter.routes.js')
 const candidateRoutes = require('./src/routes/candidate.routes.js')
 
-
 var app = express();
 app.use(cors())
 app.use(bodyParser.urlencoded({extended:false}))
 app.use(bodyParser.json())
 
 
-let url="mongodb+srv://iai-sms:1nNl4MMt6gygBsYz@cluster0.sbmrul9.mongodb.net/comel"
+// let url="mongodb+srv://iai-sms:1nNl4MMt6gygBsYz@cluster0.sbmrul9.mongodb.net/comel"
+let url = "mongodb://127.0.0.1:27017/comel"
 mongoose.connect(url)
 .then((con)=>{
         console.log("Connected to the db")

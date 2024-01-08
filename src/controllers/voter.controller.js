@@ -1,8 +1,5 @@
 const Voter = require("../models/voter");
-const dotenv = require('dotenv');
 const nodemailer = require("nodemailer");
-const moment = require("moment");
-dotenv.config();
 
 exports.getVoters = async (req, res) => {
     try {
@@ -50,41 +47,40 @@ exports.createVoter = async (req, res) => {
 };
 exports.Votes = async (req, res) => {
     try {
-        console.log(req.body)
-        let voterModel = {
-            name: req.body.name,
-            email: req.body.email,
-            class: req.body.class,
-            level: req.body.level,
-            candidate: req.body.candidate,
-        }
-        let votes = {
-            candidate: voterModel.candidate,
-            doneOn: new Date,
-            doneAt: '',
-            approvedby: 'ONLINE',
-        }
+
+            let {name ,email ,classe ,candidate} = req.body
+            console.log(req.body)
+
         let verificationCode = ''
         for (let i = 0; i < 6; i++) {
             let temp = Math.floor(Math.random() * 10)
             verificationCode += temp
         }
+
+        console.log(verificationCode)
+
         const voters = await Voter.findOne({
-            'name': voterModel.name,
-            'email': voterModel.email,
-            'class': voterModel.class,
-            'level': voterModel.level,
+            'name': name,
+            'email':email,
+            'class':classe
         });
-        console.log(votes)
-        if (voters) {
-            if (voters.status.toLowerCase() !== 'voted') {
-                // if (voters.verificationTime) {
-                //     let intervals = moment().subtract(voters.verificationTime
-                // }
-                voters.votes = votes;
-                voters.verificationCode = verificationCode;
-                voters.verificationTime = new Date;
-                await voters.save()
+        console.log(voters)
+        if (voters == null) {
+                let newVoter = new Voter({
+                    name:name,
+                    email:email,
+                    verificationCode:verificationCode,
+                    verificationTime:20,
+                    class:classe,
+                    status:'NOT VOTED',
+                    votes:{
+                        candidate:candidate,
+                        doneOn:Date.now(),
+                        approvedby:'online'
+                    }
+
+                })
+                await newVoter.save()
                     .then(async respond => {
                         console.log(respond.name, ":", verificationCode)
                         return res.status(200).json({ message: "a mail have been send to you confrim it" });
@@ -116,13 +112,12 @@ exports.Votes = async (req, res) => {
                     })
                     .catch(err => {
                         console.log(err)
-                        return res.status(408).json({ message: 'check you connection' });
+                        return res.status(409).json({ message: 'Server error' });
                     })
-            } else {
-                return res.status(407).json({ message: 'already Voted' });
-            }
+
         } else {
-            return res.status(406).json({ message: 'Enter correct creatidential' });
+            if(voters.status == 'VOTED')
+                return res.status(408).json({ message: 'You already voted' });
         }
     } catch (error) {
         console.error(error);
@@ -133,41 +128,30 @@ exports.Votes = async (req, res) => {
 exports.validateVotes = async (req, res) => {
     try {
         console.log(req.body)
-        let voterModel = {
-            name: req.body.name,
-            code: req.body.code,
-            email: req.body.email,
-            class: req.body.class,
-            level: req.body.level,
-            candidate: req.body.candidate,
-        }
+        let {name ,email ,code ,classe} = req.body
+
         const voters = await Voter.findOne({
-            'name': voterModel.name,
-            'email': voterModel.email,
-            'class': voterModel.class,
-            'level': voterModel.level,
+            'name': name,
+            'email':email,
+            'class':classe,
         });
         if (voters) {
-            if (voters.status.toLowerCase() !== 'voted') {
-                if (voters.verificationCode === voterModel.code) {
+                if (voters.verificationCode == code) {
                     voters.status = "VOTED";
                     await voters.save()
                         .then(async respond => {
                             console.log(respond)
-                            return res.status(200).json({ message: "you voted have be accepted" });
-
+                            return res.status(200).json({ message: "Vote register successfully" ,status:true });
                         })
                         .catch(err => {
-                            return res.status(409).json({ message: 'check you connection' });
+                            return res.status(409).json({ message: 'Check you connection' });
                         })
                 } else {
-                    return res.status(409).json({ message: 'Invalid code' });
+                    return res.status(409).json({ message: 'Invalid verification code' });
                 }
-            } else {
-                return res.status(409).json({ message: 'Invalid code' });
-            }
+
         } else {
-            return res.status(408).json({ message: 'Enter correct creatidential' });
+            return res.status(408).json({ message: 'Unauthorise to validate without first voting' });
         }
     } catch (error) {
         console.error(error);
