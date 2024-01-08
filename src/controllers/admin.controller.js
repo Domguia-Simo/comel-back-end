@@ -34,7 +34,10 @@ const register=async(req ,res)=>{
     try{
         let {name ,email , password} = req.body
         console.log(req.body)
-
+        const existingAdmin = await adminModel.findOne({ 'email': email });
+        if (existingAdmin) {
+            return res.status(409).send({ message: 'Admin Email already in use.' });
+        }
             let admin = new adminModel({
                 name:name,
                 email:email,
@@ -45,6 +48,10 @@ const register=async(req ,res)=>{
                 console.log(respond)
                 return res.status(200).json({message:'admin created successfully'})
             })
+            .catch(err => {
+                console.log(err)
+                return res.status(409).json({ message: 'check you connection' });
+            })
     }
     catch(e){
         console.log(e)
@@ -54,13 +61,12 @@ const register=async(req ,res)=>{
 }
 
 const getAllUsers=async(req ,res)=>{
-    try{
-        return res.status(200).json({users:['Simo']})
-    }
-    catch(e){
-        console.log(e)
-        return res.status(500).json({error:'server error'})
+    try {
+        const admins = await adminModel.find();
+        return res.status(200).json({ admins: admins });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
     }
 }
-
 module.exports ={login ,register ,getAllUsers}
