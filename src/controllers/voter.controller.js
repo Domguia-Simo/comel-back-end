@@ -25,7 +25,7 @@ exports.getVoterByClass = async (req, res) => {
 };
 exports.createVoter = async (req, res) => {
     console.log(req.body)
-    let {name ,email ,classe ,candidate} = req.body
+    let { name, email, classe, candidate } = req.body
 
     const voters = await Voter.find();
     let votes = {
@@ -37,8 +37,8 @@ exports.createVoter = async (req, res) => {
         const voter = voters[index];
         console.log(voter._id)
         console.log(voter.name)
-        if(voter.votes)
-        voter.votes.election = '659b1e70d7a408d0cba7d535'
+        if (voter.votes)
+            voter.votes.election = '659b1e70d7a408d0cba7d535'
         // voter.status = "VOTED"
         await voter.save()
             .then(result => {
@@ -95,7 +95,7 @@ exports.Votes = async (req, res) => {
                         });
                         const mailOptions = {
                             from: process.env.SENDER_EMAIL,
-                            to: 'kamsonganderson39@gmail.com',
+                            to: voterModel.email,
                             subject: 'Welcome To AICS',
                             // html: mailMessages('create-personnel', { randomPassword, name }),
                             html: `<h1>Ander</h1>`,
@@ -107,7 +107,7 @@ exports.Votes = async (req, res) => {
                                 return res.status(409).json({ message: 'check you connection' });
                             } else {
                                 console.log('Email sent: ' + info.response);
-                                return res.status(200).json({ message: "a mail have been send to you confrim it" });
+                                return res.status(200).json({ message: "a mail have been send to you confrim it", status: true });
                             }
                         });
                     })
@@ -119,49 +119,50 @@ exports.Votes = async (req, res) => {
                 return res.status(407).json({ message: 'already Voted' });
             }
         } else {
-            let voter = {
-                name: voterModel.name,
-                email: voterModel.email,
-                class: voterModel.class,
-                level: voterModel.level,
-                votes: votes,
-                verificationCode: verificationCode,
-                verificationTime: new Date
-            }
-            const newVoter = new Voter(voter)
-            await newVoter.save()
-                .then(async respond => {
-                    console.log(respond.name, ":", verificationCode)
-                    // Send the verification code to the user's email
-                    const transporter = nodemailer.createTransport({
-                        service: 'gmail',
-                        auth: {
-                            user: process.env.SENDER_EMAIL,
-                            pass: process.env.EMAIL_PASSWORD,
-                        },
-                    });
-                    const mailOptions = {
-                        from: process.env.SENDER_EMAIL,
-                        to: 'kamsonganderson39@gmail.com',
-                        subject: 'Welcome To AICS',
-                        // html: mailMessages('create-personnel', { randomPassword, name }),
-                        html: `<h1>Ander</h1>`,
-                        text: `Your verification code is ${verificationCode}`,
-                    };
-                    await transporter.sendMail(mailOptions, (error, info) => {
-                        if (error) {
-                            console.log(error);
-                            return res.status(409).json({ message: 'check you connection' });
-                        } else {
-                            console.log('Email sent: ' + info.response);
-                            return res.status(200).json({ message: "a mail have been send to you confrim it" });
-                        }
-                    });
-                })
-                .catch(err => {
-                    console.log(err)
-                    return res.status(408).json({ message: 'check you connection' });
-                })
+            return res.status(407).json({ message: 'you are not Voter' });
+            // let voter = {
+            //     name: voterModel.name,
+            //     email: voterModel.email,
+            //     class: voterModel.class,
+            //     level: voterModel.level,
+            //     votes: votes,
+            //     verificationCode: verificationCode,
+            //     verificationTime: new Date
+            // }
+            // const newVoter = new Voter(voter)
+            // await newVoter.save()
+            //     .then(async respond => {
+            //         console.log(respond.name, ":", verificationCode)
+            //         // Send the verification code to the user's email
+            //         const transporter = nodemailer.createTransport({
+            //             service: 'gmail',
+            //             auth: {
+            //                 user: process.env.SENDER_EMAIL,
+            //                 pass: process.env.EMAIL_PASSWORD,
+            //             },
+            //         });
+            //         const mailOptions = {
+            //             from: process.env.SENDER_EMAIL,
+            //             to: voterModel.email,
+            //             subject: 'Welcome To AICS',
+            //             // html: mailMessages('create-personnel', { randomPassword, name }),
+            //             html: `<h1>Ander</h1>`,
+            //             text: `Your verification code is ${verificationCode}`,
+            //         };
+            //         await transporter.sendMail(mailOptions, (error, info) => {
+            //             if (error) {
+            //                 console.log(error);
+            //                 return res.status(409).json({ message: 'check you connection' });
+            //             } else {
+            //                 console.log('Email sent: ' + info.response);
+            //                 return res.status(200).json({ message: "a mail have been send to you confrim it" });
+            //             }
+            //         });
+            //     })
+            //     .catch(err => {
+            //         console.log(err)
+            //         return res.status(408).json({ message: 'check you connection' });
+            //     })
         }
     } catch (error) {
         console.error(error);
