@@ -144,7 +144,7 @@ exports.Votes = async (req, res) => {
                         })
                         .catch(err => {
                             console.log(err)
-                            return res.status(408).json({ message: 'check you connection' });
+                            return res.status(408).json({ message: 'check you connection email' });
                         })
                 }
 
