@@ -7,10 +7,10 @@ const router = express.Router()
 
 router.get("/getAllVoter", getVoters)
 router.get("/getVoterByClass/:classes", getVoterByClass)
-router.post("/createVoter", createVoter)
+// router.post("/createVoter", createVoter)
 router.post("/votes", Votes)
 router.post("/validateVotes", validateVotes)
-router.post("/votesByAdmin", VotesByAdmin)
+// router.post("/votesByAdmin", VotesByAdmin)
 
 module.exports = router;
 

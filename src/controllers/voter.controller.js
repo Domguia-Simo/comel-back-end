@@ -90,7 +90,7 @@ exports.Votes = async (req, res) => {
                 voters.votes = votes;
                 voters.verificationCode = verificationCode;
                 voters.verificationTime = new Date;
-                
+
                 if (token) {
                     try {
                         const decoded_user_payload = jwt.verify(token, 'mytoken');
@@ -129,7 +129,7 @@ exports.Votes = async (req, res) => {
                                 to: voterModel.email,
                                 subject: 'Welcome To AICS',
                                 // html: mailMessages('create-personnel', { randomPassword, name }),
-                                html: `<h1>Ander</h1>`,
+                                // html: `<h1>Ander</h1>`,
                                 text: `Your verification code is ${verificationCode}`,
                             };
                             await transporter.sendMail(mailOptions, (error, info) => {
@@ -150,10 +150,10 @@ exports.Votes = async (req, res) => {
 
                 //
             } else {
-                return res.status(407).json({ message: 'already Voted' });
+                return res.status(407).json({ message: 'already Voted', statusAdmin: true });
             }
         } else {
-            return res.status(407).json({ message: 'you are not Voter' });
+            return res.status(407).json({ message: 'you are not Voter', statusAdmin: true });
             // let voter = {
             //     name: voterModel.name,
             //     email: voterModel.email,
@@ -207,41 +207,34 @@ exports.Votes = async (req, res) => {
 exports.validateVotes = async (req, res) => {
     try {
         console.log(req.body)
-        let voterModel = {
-            name: req.body.name,
-            code: req.body.code,
-            email: req.body.email,
-            class: req.body.class,
-            level: req.body.level,
-            candidate: req.body.candidate,
-        }
+        let { name,
+            email,
+            classe,
+            code
+        } = req.body
         const voters = await Voter.findOne({
-            'name': voterModel.name,
-            'email': voterModel.email,
-            'class': voterModel.class,
-            'level': voterModel.level,
+            'name': name,
+            'email': email,
+            'class': classe,
+            'verificationCode': code,
         });
+        console.log(voters);
         if (voters) {
             if (voters.status.toLowerCase() !== 'voted') {
-                if (voters.verificationCode === voterModel.code) {
-                    voters.status = "VOTED";
-                    await voters.save()
-                        .then(async respond => {
-                            console.log(respond)
-                            return res.status(200).json({ message: "you voted have be accepted" });
-
-                        })
-                        .catch(err => {
-                            return res.status(409).json({ message: 'check you connection' });
-                        })
-                } else {
-                    return res.status(409).json({ message: 'Invalid code' });
-                }
+                voters.status = "VOTED";
+                await voters.save()
+                    .then(async respond => {
+                        console.log(respond)
+                        return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
+                    })
+                    .catch(err => {
+                        return res.status(409).json({ message: 'check you connection' });
+                    })
             } else {
-                return res.status(409).json({ message: 'Invalid code' });
+                return res.status(409).json({ message: 'Already voted', statusAdmin: true });
             }
         } else {
-            return res.status(408).json({ message: 'Enter correct creatidential' });
+            return res.status(409).json({ message: 'Invalid code' });
         }
     } catch (error) {
         console.error(error);
