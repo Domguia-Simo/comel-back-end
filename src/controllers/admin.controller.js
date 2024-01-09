@@ -19,7 +19,7 @@ const login=async(req ,res)=>{
 
             // admin.token = token
 
-            return res.status(200).json({message:'login successful' ,token:token})
+            return res.status(200).json({message:'login successful',name:admin.name ,token:token})
 
     }
     catch(e){

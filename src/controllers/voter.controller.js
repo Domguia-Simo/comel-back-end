@@ -153,6 +153,7 @@ exports.Votes = async (req, res) => {
                 return res.status(407).json({ message: 'already Voted', statusAdmin: true });
             }
         } else {
+            console.log('you are not Voter')
             return res.status(407).json({ message: 'you are not Voter', statusAdmin: true });
             // let voter = {
             //     name: voterModel.name,
@@ -212,6 +213,9 @@ exports.validateVotes = async (req, res) => {
             classe,
             code
         } = req.body
+        if(!parseInt(code)){
+            return res.status(409).json({ message: 'the verification code is a number' });
+        }
         const voters = await Voter.findOne({
             'name': name,
             'email': email,
