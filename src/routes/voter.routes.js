@@ -6,9 +6,9 @@ const isLogin = require("../middleware/isLogin");
 const router = express.Router()
 
 
-router.get("/getAllVoter", getVoters)
+router.get("/getAllVoter", isLogin, getVoters)
 router.get("/getVoterByClass/:classes", isLogin, getVoterByClass)
-// router.post("/createVoter", createVoter)
+router.post("/createVoter", createVoter)
 router.post("/votes", Votes)
 router.post("/validateVotes", validateVotes)
 // router.post("/votesByAdmin", VotesByAdmin)

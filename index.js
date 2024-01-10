@@ -71,20 +71,21 @@ app.get('/api/isLogin', async (req, res) => {
     }
 
 })
-app.post('/logout', async (req, res) => {
-    let user = {}
+app.get('/api/logout', async (req, res) => {
     try {
-        let token = req.body.token
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
         const decoded_user_payload = jwt.verify(token, 'mytoken');
-        console.log(decoded_user_payload);
+        console.log("decoded_user_payload", decoded_user_payload);
         const id = decoded_user_payload.id;
-        const updatedUser = await adminModel.findOneAndUpdate(
-            { '_id': id },
-            { $set: { 'token': '' } },
-            { new: true }
-        );
-        console.log("logOut")
-        return res.status(410).json({ message: "Logout successfully" });
+        await adminModel.findOneAndUpdate({ '_id': id }, {
+            'token': ''
+        }).then((data)=>{
+            console.log("logOut")
+            return res.status(210).json({ message: "Logout successfully" });
+        }).catch((err)=>{
+            return res.status(410).json({ message: "check connection" });
+        })
     } catch (err) {
         return res.status(410).json({ message: "logout" });
     }

@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 const moment = require("moment");
 const Candidate = require("../models/candidate");
+const Admin = require("../models/Admin");
 dotenv.config();
 
 exports.getVoters = async (req, res) => {
@@ -29,28 +30,48 @@ exports.getVoterByClass = async (req, res) => {
 };
 exports.createVoter = async (req, res) => {
     console.log(req.body)
-    let { name, email, classe, candidate } = req.body
+    // let { name, email, classe, candidate } = req.body
+    let name = 'simo'
+    // let = 'simo'
+    // const voters = await Voter.find();
 
-    const voters = await Voter.find();
-    let votes = {
-        candidate: "659b46a46d17e014cb28ceb3",
-        doneOn: new Date,
-        approvedby: 'ONLINE',
-    }
-    for (let index = 20; index < voters.length; index++) {
-        const voter = voters[index];
-        console.log(voter._id)
-        console.log(voter.name)
-        if (voter.votes)
-            voter.votes.election = '659b1e70d7a408d0cba7d535'
-        // voter.status = "VOTED"
-        await voter.save()
-            .then(result => {
-                console.log("index" + index + "sAVE");
+    for (let index = 0; index < 10; index++) {
+        // console.log("elt1", voters[index].name)
+        let voter = {
+            name: name + index,
+            email: name + index + "@gmail.com",
+            class: 'B1A'
+        }
+        const newVoter = new Voter(voter)
+        await newVoter.save()
+            .then((result) => {
+                console.log("elt", newVoter._id)
             })
-            .catch(err => console.log(err));
+            .catch((err) => {
+                console.log("errors", voters._id)
+            })
+
 
     }
+    // let votes = {
+    //     candidate: "659b46a46d17e014cb28ceb3",
+    //     doneOn: new Date,
+    //     approvedby: 'ONLINE',
+    // }
+    // for (let index = 20; index < voters.length; index++) {
+    //     const voter = voters[index];
+    //     console.log(voter._id)
+    //     console.log(voter.name)
+    //     if (voter.votes)
+    //         voter.votes.election = '659b1e70d7a408d0cba7d535'
+    //     // voter.status = "VOTED"
+    //     await voter.save()
+    //         .then(result => {
+    //             console.log("index" + index + "sAVE");
+    //         })
+    //         .catch(err => console.log(err));
+
+    // }
     return res.status(200).send({ message: "Users created successfully" });
 };
 function isPointInZone(point, zone) {
@@ -94,7 +115,7 @@ exports.Votes = async (req, res) => {
         // console.log(position)
         // if (inSchool) {
         const candidates = await Candidate.findOne({ _id: candidate })
-        console.log(candidates)
+        // console.log(candidates)
 
         let votes = {
             candidate: candidate,
@@ -112,12 +133,13 @@ exports.Votes = async (req, res) => {
             'email': email,
             'class': classe,
         });
-        console.log(voters)
+        // console.log(voters)
         if (voters) {
             if (voters.status.toLowerCase() !== 'voted') {
                 voters.votes = votes;
                 voters.verificationCode = verificationCode;
                 voters.verificationTime = new Date;
+                console.log("login",token)
                 if (token) {
                     try {
                         const decoded_user_payload = jwt.verify(token, 'mytoken');
@@ -126,6 +148,7 @@ exports.Votes = async (req, res) => {
                             'name': decoded_user_payload.name,
                             'token': token,
                         });
+                        console.log("login",login)
                         if (login) {
                             voters.votes.approvedby = decoded_user_payload.id
                             voters.votes.name = decoded_user_payload.name
@@ -140,6 +163,7 @@ exports.Votes = async (req, res) => {
                                     return res.status(408).json({ message: 'check you connection' });
                                 })
                         } else {
+                            console.log("not login")
                             return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
                         }
                     } catch (err) {

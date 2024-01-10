@@ -4,7 +4,7 @@ const Admin = require('../models/Admin');
 const isLogin = async (req, res, next) => {
 
     try {
-        console.log(req.headers)
+        // console.log(req.headers)
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
 
@@ -12,7 +12,7 @@ const isLogin = async (req, res, next) => {
             return res.status(401).json({ message: 'Acess Denied' });
         }
 
-        console.log(token)
+        // console.log(token)
         const decoded_user_payload = jwt.verify(token, 'mytoken');
         let { id, name } = decoded_user_payload
 
