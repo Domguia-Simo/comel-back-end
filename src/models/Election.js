@@ -7,8 +7,10 @@ const electionSchema = new mongoose.Schema({
     stateDate:{ type: Date, require: true },
     endDate:{ type: Date, require: true },
     status: {
-        type: Boolean,
-        default: false
+        type: String,
+        enum: ['END', 'OCCURRING','READY'],
+        require: true,
+        default: "READY"
     },
     createdBy:{ type: String, require: true },
     createdAt: {

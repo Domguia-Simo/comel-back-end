@@ -1,66 +1,72 @@
 const adminModel = require('../models/Admin.js')
 const jwt = require('jsonwebtoken')
 
-const login=async(req ,res)=>{
+const login = async (req, res) => {
 
-    try{
-        let {email ,password} = req.body
-        let admin = await adminModel.findOne({email:email})
+    try {
+        let { email, password } = req.body
+        let admin = await adminModel.findOne({ email: email })
         // console.log(admin)
-            if(admin == null){
-                return res.status(401).json({message:'not existing email'})
-            }
-            if(password != admin.password){
-                return res.status(401).json({message:'Invalid email or password'})
-            }
+        if (admin == null) {
+            return res.status(401).json({ message: 'not existing email' })
+        }
+        if (password != admin.password) {
+            return res.status(401).json({ message: 'Invalid email or password' })
+        }
 
-            let token = jwt.sign({id:admin._id ,name:admin.name},'mytoken')
-            // console.log(token)
+        let token = jwt.sign({ id: admin._id, name: admin.name }, 'mytoken')
+        // console.log(token)
 
-            // admin.token = token
+        admin.token = token
+        admin.save()
+            .then((result) => {
+                return res.status(200).json({ message: 'login successful', name: admin.name, token: token })
+            })
+            .catch((err) => {
+                return res.status(401).json({ message: 'check your connection' })
+            })
 
-            return res.status(200).json({message:'login successful',name:admin.name ,token:token})
 
     }
-    catch(e){
+    catch (e) {
         console.log(e)
-        return res.status(500).json({error:'server error'})
+        return res.status(500).json({ error: 'server error' })
     }
 
 }
 
 
-const register=async(req ,res)=>{
-    try{
-        let {name ,email , password} = req.body
+const register = async (req, res) => {
+    try {
+        let { name, email, password } = req.body
         console.log(req.body)
         const existingAdmin = await adminModel.findOne({ 'email': email });
         if (existingAdmin) {
             return res.status(409).send({ message: 'Admin Email already in use.' });
         }
-            let admin = new adminModel({
-                name:name,
-                email:email,
-                password:password
-            })
-            admin.save()
-            .then(respond =>{
+        let admin = new adminModel({
+            name: name,
+            email: email,
+            password: password
+        })
+        admin.save()
+            .then(respond => {
                 console.log(respond)
-                return res.status(200).json({message:'admin created successfully'})
+                return res.status(200).json({ message: 'admin created successfully' })
             })
             .catch(err => {
                 console.log(err)
                 return res.status(409).json({ message: 'check you connection' });
             })
     }
-    catch(e){
+    catch (e) {
         console.log(e)
-        return res.status(500).json({error:'server error'})
+        return res.status(500).json({ error: 'server error' })
     }
 
 }
 
-const getAllUsers=async(req ,res)=>{
+const getAllUsers = async (req, res) => {
     try {
         const admins = await adminModel.find();
         return res.status(200).json({ admins: admins });
@@ -69,4 +75,4 @@ const getAllUsers=async(req ,res)=>{
         return res.status(500).json({ message: 'Server error' });
     }
 }
-module.exports ={login ,register ,getAllUsers}
+module.exports = { login, register, getAllUsers }

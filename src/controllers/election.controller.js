@@ -17,13 +17,24 @@ exports.electionResult = async (req, res) => {
         let id = req.body.id || req.params.id;
         console.log(id)
         const elections = await Election.findOne({ _id: id });
-        const candidates = await Candidate.find({ election: id });
-        const voters = await Voter.find({ "votes.election": id });
-        return res.status(200).json({
-            election: elections,
-            candidates: candidates,
-            voters: voters
-        });
+        console.log(elections);
+        if (elections.endDate) {
+            const candidates = await Candidate.find({ election: id });
+            const voters = await Voter.find({ "votes.election": id });
+            return res.status(200).json({
+                election: elections,
+                candidates: candidates,
+                voters: voters,
+                message: 'Election end'
+            });
+        } else {
+            return res.status(200).json({
+                election: [],
+                candidates: [],
+                voters: [],
+                message: 'Election not yet end'
+            });
+        }
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error' });
@@ -44,71 +55,75 @@ exports.createElection = async (req, res) => {
     const newElection = new Election(election)
     newElection.save()
         .then((result) => {
-            return res.status(200).send(newElection);
+            return res.status(200).send({ message: `Election create sucessfully.`, status: true });
         })
-        .catch((err) => console.log(err))
+        .catch((err) => {
+            return res.status(409).send({ message: "An error occur check you connection", status: false });
+        })
 };
 exports.closeElection = async (req, res) => {
-    console.log(req.body)
-    const election = await Election.findById(req.body.id);
+    let id = req.params.id
+    console.log(id)
+    const election = await Election.findById(id);
     console.log(election)
     if (election) {
         if (!election.endDate) {
             try {
-                election.status = true;
+                election.status = 'END';
                 election.endDate = new Date
                 election.save()
                     .then((result) => {
-                        return res.status(200).send({ message: `Election end sucessfully on ${election.stateDate}.` });
+                        return res.status(200).send({ message: `Election end sucessfully on ${election.stateDate}.`, status: true });
                     })
                     .catch((err) => {
-                        return res.status(409).send({ message: "An error occur check you connection" });
+                        return res.status(409).send({ message: "An error occur check you connection", status: false });
                     })
             } catch (err) {
                 // console.log(err)
                 return res.send({ message: "Access Denied." })
             }
         } else {
-            return res.send({ message: "election not more avaliable" })
+            return res.send({ message: "election already ended", status: false })
         }
     } else {
-        return res.send({ message: "election not more avaliable" })
+        return res.send({ message: "election not more avaliable", status: false })
     }
 }
 exports.startElection = async (req, res) => {
-    console.log(req.body)
-    const election = await Election.findById(req.body.id);
+    // console.log(req.body)
+    let id = req.params.id
+    console.log(id)
+    const election = await Election.findById(id);
     console.log(election)
     if (election) {
         if (!election.stateDate) {
             try {
-                election.status = true;
+                election.status = 'OCCURRING';
                 election.stateDate = new Date
                 election.save()
                     .then((result) => {
-                        return res.status(200).send({ message: `Election start sucessfully on ${election.stateDate}.` });
+                        return res.status(200).send({ message: `Election start sucessfully on ${election.stateDate}.`, status: true });
                     })
                     .catch((err) => {
-                        return res.status(409).send({ message: "An error occur check you connection" });
+                        return res.status(509).send({ message: "An error occur check you connection", status: false });
                     })
             } catch (err) {
-                // console.log(err)
-                return res.send({ message: "Access Denied." })
+                return res.status(403).json({ message: "An error occur check you connection.", status: false })
             }
         } else {
-            return res.send({ message: "election not more avaliable" })
+            return res.status(503).json({ message: "election already started", status: false })
         }
     } else {
-        return res.send({ message: "election not more avaliable" })
+        return res.send({ message: "election not more avaliable", status: false })
     }
 }
 exports.deleteElection = async (req, res) => {
     let id = req.body.id || req.params.id;
     await Election.findByIdAndDelete(id)
         .then((result) => {
-            return res.status(200).send({ message: 'Election deleted successfully' });
+            return res.status(200).send({ message: 'Election deleted successfully', status: true });
         })
         .catch((err) => {
-            return res.send({ message: "an error occur while deleting" })
+            return res.send({ message: "an error occur while deleting", status: false })
         })
 };

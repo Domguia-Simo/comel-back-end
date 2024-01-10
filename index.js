@@ -9,6 +9,7 @@ const voterRoutes = require('./src/routes/voter.routes.js')
 const candidateRoutes = require('./src/routes/candidate.routes.js')
 const jwt = require('jsonwebtoken')
 const adminModel = require('./src/models/Admin.js')
+const Admin = require('./src/models/Admin.js')
 
 var app = express();
 app.use(cors())
@@ -34,16 +35,36 @@ app.use("/api/election", electionRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/voter', voterRoutes)
 app.use('/api/candidate', candidateRoutes)
-app.post('/isLogin', (req, res) => {
-    let {
-        token,
-    } = req.body
+app.get('/api/isLogin', async (req, res) => {
     try {
-        console.log(token)
+        console.log(req.headers)
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(200).json({ isLogin: false });
+        }
+
         const decoded_user_payload = jwt.verify(token, 'mytoken');
-        let { name } = decoded_user_payload
-        // console.log({ isLogin: true, name: name })
-        return res.status(200).json({ isLogin: true, name: name });
+        let { id, name } = decoded_user_payload
+        let test = await Admin.findOne({
+            '_id': id,
+            'name': name,
+            // 'token': token,
+        });
+        console.log(test)
+        let login = await Admin.findOne({
+            '_id': id,
+            'name': name,
+            'token': token,
+        });
+        if (login) {
+            req.UserName = name;
+            req.Id = id;
+            return res.status(200).json({ isLogin: true, name: name });
+        } else {
+            return res.status(200).json({ isLogin: false });
+        }
     } catch (err) {
         console.log(err)
         return res.status(200).json({ isLogin: false });
@@ -62,7 +83,7 @@ app.post('/logout', async (req, res) => {
             { $set: { 'token': '' } },
             { new: true }
         );
-            console.log("logOut")
+        console.log("logOut")
         return res.status(410).json({ message: "Logout successfully" });
     } catch (err) {
         return res.status(410).json({ message: "logout" });
