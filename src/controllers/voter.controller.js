@@ -93,9 +93,12 @@ exports.Votes = async (req, res) => {
         let { name,
             email,
             classe,
-            candidate,
+            cand,
+            election,
             // position,
         } = req.body
+        let candidate = cand
+        // console.log("in votes",position)
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
         let voterModel = {
@@ -114,13 +117,11 @@ exports.Votes = async (req, res) => {
         // console.log(inSchool)
         // console.log(position)
         // if (inSchool) {
-        const candidates = await Candidate.findOne({ _id: candidate })
-        // console.log(candidates)
 
         let votes = {
             candidate: candidate,
             doneOn: new Date,
-            election: candidates.election,
+            election: election,
             // doneAt: position,
         }
         let verificationCode = ''
@@ -139,7 +140,6 @@ exports.Votes = async (req, res) => {
                 voters.votes = votes;
                 voters.verificationCode = verificationCode;
                 voters.verificationTime = new Date;
-                console.log("login",token)
                 if (token) {
                     try {
                         const decoded_user_payload = jwt.verify(token, 'mytoken');
@@ -168,7 +168,7 @@ exports.Votes = async (req, res) => {
                         }
                     } catch (err) {
                         console.log(err)
-                        return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
+                        return res.status(400).json({ message: 'you session has exprie', statusLogin: true });
                     }
                 } else {
                     voters.votes.approvedby = 'ONLINE'
@@ -204,15 +204,15 @@ exports.Votes = async (req, res) => {
                         })
                         .catch(err => {
                             console.log(err)
-                            return res.status(408).json({ message: 'check you connection email' });
+                            return res.status(400).json({ message: 'check you connection email' });
                         })
                 }
             } else {
-                return res.status(407).json({ message: 'already Voted', statusAdmin: true });
+                return res.status(400).json({ message: 'already Voted', statusAdmin: true });
             }
         } else {
             console.log('you are not Voter')
-            return res.status(407).json({ message: 'you are not Voter', statusAdmin: true });
+            return res.status(400).json({ message: 'you are not Voter', statusAdmin: true });
             // let voter = {
             //     name: voterModel.name,
             //     email: voterModel.email,
