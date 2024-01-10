@@ -8,7 +8,7 @@ const candidateSchema = new Schema({
         type: String,
         require: true,
         match: /.+\@.+\..+/, // Simple regex for email validation
-        unique: true
+        // unique: true
     },
     desc: { type: String, require: true },
     phone: { type: String, require: true },
@@ -20,7 +20,8 @@ const candidateSchema = new Schema({
         default: Date.now,
     },
     location: Object,
-    createdBy:{ type: String, require: true },
+    createdById:{ type: String, require: true },
+    createdByName:{ type: String, require: true },
 });
 
 const Candidate = mongoose.model('Candidate', candidateSchema);
