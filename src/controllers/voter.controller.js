@@ -94,7 +94,7 @@ exports.Votes = async (req, res) => {
             email,
             classe,
             candidate,
-            position,
+            // position,
         } = req.body
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
@@ -105,12 +105,12 @@ exports.Votes = async (req, res) => {
             candidate: candidate,
         }
 
-        let inSchool = await isPointInZone(position, {
-            minLatitude: 3.812688872322855,
-            minLongitude: 11.55732362354677,
-            maxLatitude: 3.8140805329527545,
-            maxLongitude: 11.559480119615515
-        })
+        // let inSchool = await isPointInZone(position, {
+        //     minLatitude: 3.812688872322855,
+        //     minLongitude: 11.55732362354677,
+        //     maxLatitude: 3.8140805329527545,
+        //     maxLongitude: 11.559480119615515
+        // })
         // console.log(inSchool)
         // console.log(position)
         // if (inSchool) {
@@ -121,7 +121,7 @@ exports.Votes = async (req, res) => {
             candidate: candidate,
             doneOn: new Date,
             election: candidates.election,
-            doneAt: position,
+            // doneAt: position,
         }
         let verificationCode = ''
         for (let i = 0; i < 6; i++) {
