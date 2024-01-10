@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken')
 const nodemailer = require("nodemailer");
 const moment = require("moment");
+const Candidate = require("../models/candidate");
 dotenv.config();
 
 exports.getVoters = async (req, res) => {
@@ -52,27 +53,54 @@ exports.createVoter = async (req, res) => {
     }
     return res.status(200).send({ message: "Users created successfully" });
 };
+function isPointInZone(point, zone) {
+    // Extract the coordinates of the point
+    const { latitude, longitude } = point;
+
+    // Check if the latitude is within the zone's boundaries
+    if (latitude >= zone.minLatitude && latitude <= zone.maxLatitude) {
+        // Check if the longitude is within the zone's boundaries
+        if (longitude >= zone.minLongitude && longitude <= zone.maxLongitude) {
+            return true; // The point is within the zone
+        }
+    }
+
+    return false; // The point is outside the zone
+}
 exports.Votes = async (req, res) => {
     try {
         let { name,
             email,
             classe,
             candidate,
-            token,
             position,
         } = req.body
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
         let voterModel = {
             name: name,
             email: email,
             class: classe,
             candidate: candidate,
         }
+
+        let inSchool = await isPointInZone(position, {
+            minLatitude: 3.812688872322855,
+            minLongitude: 11.55732362354677,
+            maxLatitude: 3.8140805329527545,
+            maxLongitude: 11.559480119615515
+        })
+        // console.log(inSchool)
+        // console.log(position)
+        // if (inSchool) {
+        const candidates = await Candidate.findOne({ _id: candidate })
+        console.log(candidates)
+
         let votes = {
             candidate: candidate,
             doneOn: new Date,
-            election: '659b1e70d7a408d0cba7d535',
+            election: candidates.election,
             doneAt: position,
-            // approvedby: 'ONLINE',
         }
         let verificationCode = ''
         for (let i = 0; i < 6; i++) {
@@ -84,28 +112,36 @@ exports.Votes = async (req, res) => {
             'email': email,
             'class': classe,
         });
-        // console.log(voters)
+        console.log(voters)
         if (voters) {
             if (voters.status.toLowerCase() !== 'voted') {
                 voters.votes = votes;
                 voters.verificationCode = verificationCode;
                 voters.verificationTime = new Date;
-
                 if (token) {
                     try {
                         const decoded_user_payload = jwt.verify(token, 'mytoken');
-                        voters.votes.approvedby = decoded_user_payload.id
-                        voters.votes.name = decoded_user_payload.name
-                        voters.status = "VOTED";
-                        console.log(voters)
-                        await voters.save()
-                            .then(async respond => {
-                                console.log(respond)
-                                return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
-                            })
-                            .catch(err => {
-                                return res.status(408).json({ message: 'check you connection' });
-                            })
+                        let login = await Admin.findOne({
+                            '_id': decoded_user_payload.id,
+                            'name': decoded_user_payload.name,
+                            'token': token,
+                        });
+                        if (login) {
+                            voters.votes.approvedby = decoded_user_payload.id
+                            voters.votes.name = decoded_user_payload.name
+                            voters.status = "VOTED";
+                            console.log(voters)
+                            await voters.save()
+                                .then(async respond => {
+                                    console.log(respond)
+                                    return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
+                                })
+                                .catch(err => {
+                                    return res.status(408).json({ message: 'check you connection' });
+                                })
+                        } else {
+                            return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
+                        }
                     } catch (err) {
                         console.log(err)
                         return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
@@ -147,8 +183,6 @@ exports.Votes = async (req, res) => {
                             return res.status(408).json({ message: 'check you connection email' });
                         })
                 }
-
-                //
             } else {
                 return res.status(407).json({ message: 'already Voted', statusAdmin: true });
             }
@@ -199,6 +233,9 @@ exports.Votes = async (req, res) => {
             //         return res.status(408).json({ message: 'check you connection' });
             //     })
         }
+        // } else {
+        //     return res.status(406).json({ message: 'you are not on campus', statusAdmin: true });
+        // }
     } catch (error) {
         console.log(error);
         return res.status(500).json({ message: 'Server error' });
@@ -213,7 +250,7 @@ exports.validateVotes = async (req, res) => {
             classe,
             code
         } = req.body
-        if(!parseInt(code)){
+        if (!parseInt(code)) {
             return res.status(409).json({ message: 'the verification code is a number' });
         }
         const voters = await Voter.findOne({
