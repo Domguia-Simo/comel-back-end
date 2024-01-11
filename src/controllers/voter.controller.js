@@ -31,7 +31,7 @@ exports.getVoterByClass = async (req, res) => {
 exports.createVoter = async (req, res) => {
     console.log(req.body)
     // let { name, email, classe, candidate } = req.body
-    let name = 'simo'
+    let name = 'SE2022L1B2'
     // let = 'simo'
     // const voters = await Voter.find();
 
@@ -39,18 +39,20 @@ exports.createVoter = async (req, res) => {
         // console.log("elt1", voters[index].name)
         let voter = {
             name: name + index,
-            email: name + index + "@gmail.com",
-            class: 'B1A'
+            email:name + index + '@gmail.com',
+            class: 'L1A'
         }
         const newVoter = new Voter(voter)
+        // await Voter.findByIdAndDelete(voters[index]._id)
         await newVoter.save()
             .then((result) => {
-                console.log("elt", newVoter._id)
+                console.log("elt del", voter.name)
             })
-            .catch((err) => {
-                console.log("errors", voters._id)
-            })
+            .catch((err) => {                
 
+                console.log("errors",err)
+                console.log("errors", voter.name)
+            })
 
     }
     // let votes = {
@@ -72,7 +74,7 @@ exports.createVoter = async (req, res) => {
     //         .catch(err => console.log(err));
 
     // }
-    return res.status(200).send({ message: "Users created successfully" });
+    return res.status(200).send({ message: "Users created successfully 3" });
 };
 function isPointInZone(point, zone) {
     // Extract the coordinates of the point
