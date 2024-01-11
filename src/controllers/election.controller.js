@@ -21,7 +21,9 @@ exports.electionResult = async (req, res) => {
         console.log(elections);
         if (elections.endDate) {
             const candidates = await Candidate.find({ election: id });
-            const voters = await Voter.find({ "votes.election": id });
+            const voters = await Voter.find();
+            console.log(voters);
+            // const voters = await Voter.find({ "votes.election": id });
             return res.status(200).json({
                 election: elections,
                 candidates: candidates,

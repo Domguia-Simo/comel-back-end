@@ -39,7 +39,7 @@ exports.createVoter = async (req, res) => {
         // console.log("elt1", voters[index].name)
         let voter = {
             name: name + index,
-            email:name + index + '@gmail.com',
+            email: name + index + '@gmail.com',
             class: 'L1A'
         }
         const newVoter = new Voter(voter)
@@ -48,9 +48,9 @@ exports.createVoter = async (req, res) => {
             .then((result) => {
                 console.log("elt del", voter.name)
             })
-            .catch((err) => {                
+            .catch((err) => {
 
-                console.log("errors",err)
+                console.log("errors", err)
                 console.log("errors", voter.name)
             })
 
@@ -95,11 +95,10 @@ exports.Votes = async (req, res) => {
         let { name,
             email,
             classe,
-            cand,
+            candidate,
             election,
             // position,
         } = req.body
-        let candidate = cand
         // console.log("in votes",position)
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
@@ -136,7 +135,7 @@ exports.Votes = async (req, res) => {
             // 'email': email.toLowerCase(),
             // 'class': classe.toUpperCase(),
         });
-        // console.log(voters)
+        // console.log(votes)
         if (voters) {
             if (voters.email !== email.toLowerCase()) {
                 let emailUsed = await Voter.findOne({ email: email.toLowerCase() })
@@ -148,6 +147,7 @@ exports.Votes = async (req, res) => {
                 voters.votes = votes;
                 voters.verificationCode = verificationCode;
                 voters.verificationTime = new Date;
+                // console.log("token", token)
                 if (token) {
                     try {
                         const decoded_user_payload = jwt.verify(token, 'mytoken');
