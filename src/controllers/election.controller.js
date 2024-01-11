@@ -1,6 +1,7 @@
 const Candidate = require("../models/candidate");
 const Election = require("../models/Election");
 const Voter = require("../models/voter");
+const adminModel = require('../models/Admin.js')
 
 
 exports.getElections = async (req, res) => {
@@ -52,78 +53,115 @@ exports.createElection = async (req, res) => {
     // const { error } = electionSchema.validate(election);
     // if (error)
     //     return res.status(500).send(error);
-    const newElection = new Election(election)
-    newElection.save()
-        .then((result) => {
-            return res.status(200).send({ message: `Election create sucessfully.`, status: true });
-        })
-        .catch((err) => {
-            return res.status(409).send({ message: "An error occur check you connection", status: false });
-        })
+    let admin = await adminModel.findOne({ _id: req.Id })
+    if (admin) {
+        if (admin.accountType === "SuperAdmin") {
+            const newElection = new Election(election)
+            newElection.save()
+                .then((result) => {
+                    return res.status(200).send({ message: `Election create sucessfully.`, status: true });
+                })
+                .catch((err) => {
+                    return res.status(409).send({ message: "An error occur check you connection", status: false });
+                })
+        } else {
+            return res.status(400).json({ message: 'Acess Denied' });
+        }
+    } else {
+        return res.status(400).json({ message: 'Acess Denied' });
+    }
 };
 exports.closeElection = async (req, res) => {
     let id = req.params.id
     console.log(id)
-    const election = await Election.findById(id);
-    console.log(election)
-    if (election) {
-        if (!election.endDate) {
-            try {
-                election.status = 'END';
-                election.endDate = new Date
-                election.save()
-                    .then((result) => {
-                        return res.status(200).send({ message: `Election end sucessfully on ${election.stateDate}.`, status: true });
-                    })
-                    .catch((err) => {
-                        return res.status(409).send({ message: "An error occur check you connection", status: false });
-                    })
-            } catch (err) {
-                // console.log(err)
-                return res.send({ message: "Access Denied." })
+    let admin = await adminModel.findOne({ _id: req.Id })
+    if (admin) {
+        if (admin.accountType === "SuperAdmin") {
+            const election = await Election.findById(id);
+            console.log(election)
+            if (election) {
+                if (!election.endDate) {
+                    try {
+                        election.status = 'END';
+                        election.endDate = new Date
+                        election.save()
+                            .then((result) => {
+                                return res.status(200).send({ message: `Election end sucessfully on ${election.stateDate}.`, status: true });
+                            })
+                            .catch((err) => {
+                                return res.status(409).send({ message: "An error occur check you connection", status: false });
+                            })
+                    } catch (err) {
+                        // console.log(err)
+                        return res.send({ message: "Access Denied." })
+                    }
+                } else {
+                    return res.send({ message: "election already ended", status: false })
+                }
+            } else {
+                return res.send({ message: "election not more avaliable", status: false })
             }
         } else {
-            return res.send({ message: "election already ended", status: false })
+            return res.status(400).json({ message: 'Acess Denied' });
         }
     } else {
-        return res.send({ message: "election not more avaliable", status: false })
+        return res.status(400).json({ message: 'Acess Denied' });
     }
 }
 exports.startElection = async (req, res) => {
     // console.log(req.body)
     let id = req.params.id
     console.log(id)
-    const election = await Election.findById(id);
-    console.log(election)
-    if (election) {
-        if (!election.stateDate) {
-            try {
-                election.status = 'OCCURRING';
-                election.stateDate = new Date
-                election.save()
-                    .then((result) => {
-                        return res.status(200).send({ message: `Election start sucessfully on ${election.stateDate}.`, status: true });
-                    })
-                    .catch((err) => {
-                        return res.status(509).send({ message: "An error occur check you connection", status: false });
-                    })
-            } catch (err) {
-                return res.status(403).json({ message: "An error occur check you connection.", status: false })
+    let admin = await adminModel.findOne({ _id: req.Id })
+    if (admin) {
+        if (admin.accountType === "SuperAdmin") {
+            const election = await Election.findById(id);
+            console.log(election)
+            if (election) {
+                if (!election.stateDate) {
+                    try {
+                        election.status = 'OCCURRING';
+                        election.stateDate = new Date
+                        election.save()
+                            .then((result) => {
+                                return res.status(200).send({ message: `Election start sucessfully on ${election.stateDate}.`, status: true });
+                            })
+                            .catch((err) => {
+                                return res.status(509).send({ message: "An error occur check you connection", status: false });
+                            })
+                    } catch (err) {
+                        return res.status(403).json({ message: "An error occur check you connection.", status: false })
+                    }
+                } else {
+                    return res.status(503).json({ message: "election already started", status: false })
+                }
+            } else {
+                return res.send({ message: "election not more avaliable", status: false })
             }
         } else {
-            return res.status(503).json({ message: "election already started", status: false })
+            return res.status(400).json({ message: 'Acess Denied' });
         }
     } else {
-        return res.send({ message: "election not more avaliable", status: false })
+        return res.status(400).json({ message: 'Acess Denied' });
     }
 }
 exports.deleteElection = async (req, res) => {
+    console.log(req.Id)
     let id = req.body.id || req.params.id;
-    await Election.findByIdAndDelete(id)
-        .then((result) => {
-            return res.status(200).send({ message: 'Election deleted successfully', status: true });
-        })
-        .catch((err) => {
-            return res.send({ message: "an error occur while deleting", status: false })
-        })
+    let admin = await adminModel.findOne({ _id: req.Id })
+    if (admin) {
+        if (admin.accountType === "SuperAdmin") {
+            await Election.findByIdAndDelete(id)
+                .then((result) => {
+                    return res.status(200).send({ message: 'Election deleted successfully', status: true });
+                })
+                .catch((err) => {
+                    return res.send({ message: "an error occur while deleting", status: false })
+                })
+        } else {
+            return res.status(400).json({ message: 'Acess Denied' });
+        }
+    } else {
+        return res.status(400).json({ message: 'Acess Denied' });
+    }
 };

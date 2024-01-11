@@ -14,33 +14,40 @@ exports.getCandidates = async (req, res) => {
 exports.addCandidate = async (req, res) => {
     try {
         console.log(req.body)
-        let candidateModel = {
-            name: req.body.name,
-            email: req.body.email,
-            desc: req.body.desc,
-            phone: req.body.phone,
-            class: req.body.class,
-            election: req.body.election,
-            createdById: req.Id,
-            createdByName: req.UserName
+        let admin = await adminModel.findOne({ _id: req.Id })
+        if (admin) {
+            if (admin.accountType === "SuperAdmin") {
+                let candidateModel = {
+                    name: req.body.name,
+                    email: req.body.email,
+                    desc: req.body.desc,
+                    phone: req.body.phone,
+                    class: req.body.class,
+                    election: req.body.election,
+                    createdById: req.Id,
+                    createdByName: req.UserName
+                }
+                const existingCandidate = await Candidate.findOne({ 'email': candidateModel.email });
+                if (existingCandidate) {
+                    return res.status(409).send({ message: 'Candidate Email already in use.', status: false });
+                }
+                const candidate = new Candidate(candidateModel)
+                console.log(candidate)
+                await candidate.save()
+                    .then(async respond => {
+                        console.log(respond)
+                        return res.status(200).json({ message: "Candidate created successfully", status: true });
+                    })
+                    .catch(err => {
+                        console.log(err)
+                        return res.status(409).json({ message: 'check you connection', status: false });
+                    })
+            } else {
+                return res.status(400).json({ message: 'Acess Denied' });
+            }
+        } else {
+            return res.status(400).json({ message: 'Acess Denied' });
         }
-        const existingCandidate = await Candidate.findOne({ 'email': candidateModel.email });
-        if (existingCandidate) {
-            return res.status(409).send({ message: 'Candidate Email already in use.', status: false });
-        }
-        const candidate = new Candidate(candidateModel)
-        console.log(candidate)
-        await candidate.save()
-            .then(async respond => {
-                console.log(respond)
-                return res.status(200).json({ message: "Candidate created successfully", status: true });
-            })
-            .catch(err => {
-                console.log(err)
-                return res.status(409).json({ message: 'check you connection', status: false });
-            })
-
-
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error', status: false });
@@ -50,32 +57,41 @@ exports.editCandidates = async (req, res) => {
     try {
         let id = req.body.id || req.params.id;
         console.log(req.body)
-        let candidateModel = {
-            name: req.body.name,
-            email: req.body.email,
-            desc: req.body.desc,
-            phone: req.body.phone,
-            class: req.body.class,
-            election: req.body.election,
-            createdById: req.Id,
-            createdByName: req.UserName
+        let admin = await adminModel.findOne({ _id: req.Id })
+        if (admin) {
+            if (admin.accountType === "SuperAdmin") {
+                let candidateModel = {
+                    name: req.body.name,
+                    email: req.body.email,
+                    desc: req.body.desc,
+                    phone: req.body.phone,
+                    class: req.body.class,
+                    election: req.body.election,
+                    createdById: req.Id,
+                    createdByName: req.UserName
+                }
+                await Candidate.findOneAndUpdate({ _id: id }, {
+                    'name': candidateModel.name,
+                    'email': candidateModel.email,
+                    'desc': candidateModel.desc,
+                    'phone': candidateModel.phone,
+                    'class': candidateModel.class,
+                    'election': candidateModel.election
+                })
+                    .then(async respond => {
+                        console.log(respond)
+                        return res.status(200).json({ message: "Candidate updated successfully", status: true });
+                    })
+                    .catch(err => {
+                        console.log(err)
+                        return res.status(409).json({ message: 'check you connection', status: false });
+                    })
+            } else {
+                return res.status(400).json({ message: 'Acess Denied' });
+            }
+        } else {
+            return res.status(400).json({ message: 'Acess Denied' });
         }
-        await Candidate.findOneAndUpdate({ _id: id }, {
-            'name': candidateModel.name,
-            'email': candidateModel.email,
-            'desc': candidateModel.desc,
-            'phone': candidateModel.phone,
-            'class': candidateModel.class,
-            'election': candidateModel.election
-        })
-            .then(async respond => {
-                console.log(respond)
-                return res.status(200).json({ message: "Candidate updated successfully", status: true });
-            })
-            .catch(err => {
-                console.log(err)
-                return res.status(409).json({ message: 'check you connection' , status: false});
-            })
 
     } catch (error) {
         console.error(error);
@@ -132,11 +148,20 @@ exports.uploadCandidateImage = async (req, res) => {
 
 exports.deleteCandidate = async (req, res) => {
     let id = req.body.id || req.params.id;
-    await Candidate.findByIdAndDelete(id)
-        .then((result) => {
-            return res.status(200).send({ message: 'Candidate deleted successfully', status: true });
-        })
-        .catch((err) => {
-            return res.send({ message: "an error occur while deleting", status: false })
-        })
+    let admin = await adminModel.findOne({ _id: req.Id })
+    if (admin) {
+        if (admin.accountType === "SuperAdmin") {
+            await Candidate.findByIdAndDelete(id)
+                .then((result) => {
+                    return res.status(200).send({ message: 'Candidate deleted successfully', status: true });
+                })
+                .catch((err) => {
+                    return res.send({ message: "an error occur while deleting", status: false })
+                })
+        } else {
+            return res.status(400).json({ message: 'Acess Denied' });
+        }
+    } else {
+        return res.status(400).json({ message: 'Acess Denied' });
+    }
 };

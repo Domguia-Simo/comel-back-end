@@ -49,21 +49,30 @@ const register = async (req, res) => {
         if (existingAdmin) {
             return res.status(409).send({ message: 'Admin Email already in use.' });
         }
-        const hash = await bcrypt.hash(password, 9);
-        let admin = new adminModel({
-            name: name.toLowerCase(),
-            email: email.toLowerCase(),
-            password: hash
-        })
-        admin.save()
-            .then(respond => {
-                console.log(respond)
-                return res.status(200).json({ message: 'admin created successfully' })
-            })
-            .catch(err => {
-                console.log(err)
-                return res.status(409).json({ message: 'check you connection' });
-            })
+        let admin = await adminModel.findOne({ _id: req.Id })
+        if (admin) {
+            if (admin.accountType === "SuperAdmin") {
+                const hash = await bcrypt.hash(password, 9);
+                let admin = new adminModel({
+                    name: name.toLowerCase(),
+                    email: email.toLowerCase(),
+                    password: hash
+                })
+                admin.save()
+                    .then(respond => {
+                        console.log(respond)
+                        return res.status(200).json({ message: 'admin created successfully' })
+                    })
+                    .catch(err => {
+                        console.log(err)
+                        return res.status(409).json({ message: 'check you connection' });
+                    })
+            } else {
+                return res.status(400).json({ message: 'Acess Denied' });
+            }
+        } else {
+            return res.status(400).json({ message: 'Acess Denied' });
+        }
     }
     catch (e) {
         console.log(e)

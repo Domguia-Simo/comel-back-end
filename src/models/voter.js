@@ -7,10 +7,14 @@ const VotesSchema = new Schema({
     doneOn: { type: String, require: true },
     approvedby: { type: String, require: true },
     name: { type: String, require: true },
-},{_id:false})
+}, { _id: false })
 
 const voterSchema = new Schema({
-    name: { type: String, require: true },
+    name: {
+        type: String,
+        require: true,
+        unique: true
+    },
     status: {
         type: String,
         enum: ['VOTED', 'NOT VOTED'],
@@ -23,7 +27,7 @@ const voterSchema = new Schema({
         match: /.+\@.+\..+/, // Simple regex for email validation
         unique: true
     },
-    votes: { type: VotesSchema , require: true },
+    votes: { type: VotesSchema, require: true },
     verificationCode: { type: Number, require: true },
     verificationTime: { type: Number, require: true },
     class: { type: String, require: true },

@@ -130,12 +130,18 @@ exports.Votes = async (req, res) => {
             verificationCode += temp
         }
         const voters = await Voter.findOne({
-            'name': name.toLowerCase(),
-            'email': email.toLowerCase(),
-            'class': classe.toUpperCase(),
+            'name': name.toUpperCase(),
+            // 'email': email.toLowerCase(),
+            // 'class': classe.toUpperCase(),
         });
         // console.log(voters)
         if (voters) {
+            if (voters.email !== email.toLowerCase()) {
+                let emailUsed = await Voter.findOne({ email: email.toLowerCase() })
+                if (emailUsed) {
+                    return res.status(400).json({ message: 'email already used to voted' })
+                }
+            }
             if (voters.status.toLowerCase() !== 'voted') {
                 voters.votes = votes;
                 voters.verificationCode = verificationCode;
@@ -148,7 +154,7 @@ exports.Votes = async (req, res) => {
                             'name': decoded_user_payload.name,
                             'token': token,
                         });
-                        console.log("login",login)
+                        console.log("login", login)
                         if (login) {
                             voters.votes.approvedby = decoded_user_payload.id
                             voters.votes.name = decoded_user_payload.name
@@ -171,6 +177,8 @@ exports.Votes = async (req, res) => {
                         return res.status(400).json({ message: 'you session has exprie', statusLogin: true });
                     }
                 } else {
+                    voters.email = email
+                    voters.class = classe
                     voters.votes.approvedby = 'ONLINE'
                     console.log(voters)
                     await voters.save()
@@ -208,11 +216,11 @@ exports.Votes = async (req, res) => {
                         })
                 }
             } else {
-                return res.status(400).json({ message: 'already Voted', statusAdmin: true });
+                return res.status(400).json({ message: 'already Voted' });
             }
         } else {
             console.log('you are not Voter')
-            return res.status(400).json({ message: 'you are not Voter', statusAdmin: true });
+            return res.status(400).json({ message: 'incorrect matricule' });
             // let voter = {
             //     name: voterModel.name,
             //     email: voterModel.email,
@@ -278,25 +286,31 @@ exports.validateVotes = async (req, res) => {
             return res.status(400).json({ message: 'the verification code is a number' });
         }
         const voters = await Voter.findOne({
-            'name': name.toLowerCase(),
+            'name': name.toUpperCase(),
             'email': email.toLowerCase(),
-            'class': classe.toUpperCase(),
+            // 'class': classe.toUpperCase(),
             'verificationCode': code,
         });
-        console.log(voters);
+        // console.log(voters);
         if (voters) {
-            if (voters.status.toLowerCase() !== 'voted') {
-                voters.status = "VOTED";
-                await voters.save()
-                    .then(async respond => {
-                        console.log(respond)
-                        return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
-                    })
-                    .catch(err => {
-                        return res.status(400).json({ message: 'check you connection' });
-                    })
+            let duration = moment().diff(moment(voters.verificationTime), 'minutes')
+            console.log("duration in mins", duration);
+            if (duration < 10) {
+                if (voters.status.toLowerCase() !== 'voted') {
+                    voters.status = "VOTED";
+                    await voters.save()
+                        .then(async respond => {
+                            console.log(respond)
+                            return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
+                        })
+                        .catch(err => {
+                            return res.status(400).json({ message: 'check you connection' });
+                        })
+                } else {
+                    return res.status(400).json({ message: 'Already voted', statusError: true });
+                }
             } else {
-                return res.status(400).json({ message: 'Already voted', statusAdmin: true });
+                return res.status(400).json({ message: 'you code has expired', statusError: true });
             }
         } else {
             return res.status(400).json({ message: 'Invalid code' });
@@ -354,3 +368,128 @@ exports.VotesByAdmin = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
+
+/*
+    if (voters) {
+            if (voters.status.toLowerCase() !== 'voted') {
+                voters.votes = votes;
+                voters.verificationCode = verificationCode;
+                voters.verificationTime = new Date;
+                if (token) {
+                    try {
+                        const decoded_user_payload = jwt.verify(token, 'mytoken');
+                        let login = await Admin.findOne({
+                            '_id': decoded_user_payload.id,
+                            'name': decoded_user_payload.name,
+                            'token': token,
+                        });
+                        console.log("login", login)
+                        if (login) {
+                            voters.votes.approvedby = decoded_user_payload.id
+                            voters.votes.name = decoded_user_payload.name
+                            voters.status = "VOTED";
+                            console.log(voters)
+                            await voters.save()
+                                .then(async respond => {
+                                    console.log(respond)
+                                    return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
+                                })
+                                .catch(err => {
+                                    return res.status(408).json({ message: 'check you connection' });
+                                })
+                        } else {
+                            console.log("not login")
+                            return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
+                        }
+                    } catch (err) {
+                        console.log(err)
+                        return res.status(400).json({ message: 'you session has exprie', statusLogin: true });
+                    }
+                } else {
+                    voters.votes.approvedby = 'ONLINE'
+                    console.log(voters)
+                    await voters.save()
+                        .then(async respond => {
+                            console.log(respond.name, ":", verificationCode)
+                            // Send the verification code to the user's email
+                            const transporter = nodemailer.createTransport({
+                                service: 'gmail',
+                                auth: {
+                                    user: process.env.SENDER_EMAIL,
+                                    pass: process.env.EMAIL_PASSWORD,
+                                },
+                            });
+                            const mailOptions = {
+                                from: process.env.SENDER_EMAIL,
+                                to: email.toLowerCase(),
+                                subject: 'Please comfrim you votes for AICS comel election',
+                                // html: mailMessages('create-personnel', { randomPassword, name }),
+                                // html: `<h1>Ander</h1>`,
+                                text: `Your verification code for comel election is ${verificationCode}`,
+                            };
+                            await transporter.sendMail(mailOptions, (error, info) => {
+                                if (error) {
+                                    console.log(error);
+                                    return res.status(409).json({ message: 'check you connection' });
+                                } else {
+                                    console.log('Email sent: ' + info.response);
+                                    return res.status(200).json({ message: "a mail have been send to you confrim it", status: true });
+                                }
+                            });
+                        })
+                        .catch(err => {
+                            console.log(err)
+                            return res.status(400).json({ message: 'check you connection email' });
+                        })
+                }
+            } else {
+                return res.status(400).json({ message: 'already Voted', statusAdmin: true });
+            }
+        } else {
+            console.log('you are not Voter')
+            return res.status(400).json({ message: 'incorrect matricule', statusAdmin: true });
+            // let voter = {
+            //     name: voterModel.name,
+            //     email: voterModel.email,
+            //     class: voterModel.class,
+            //     level: voterModel.level,
+            //     votes: votes,
+            //     verificationCode: verificationCode,
+            //     verificationTime: new Date
+            // }
+            // const newVoter = new Voter(voter)
+            // await newVoter.save()
+            //     .then(async respond => {
+            //         console.log(respond.name, ":", verificationCode)
+            //         // Send the verification code to the user's email
+            //         const transporter = nodemailer.createTransport({
+            //             service: 'gmail',
+            //             auth: {
+            //                 user: process.env.SENDER_EMAIL,
+            //                 pass: process.env.EMAIL_PASSWORD,
+            //             },
+            //         });
+            //         const mailOptions = {
+            //             from: process.env.SENDER_EMAIL,
+            //             to: voterModel.email,
+            //             subject: 'Welcome To AICS',
+            //             // html: mailMessages('create-personnel', { randomPassword, name }),
+            //             html: `<h1>Ander</h1>`,
+            //             text: `Your verification code is ${verificationCode}`,
+            //         };
+            //         await transporter.sendMail(mailOptions, (error, info) => {
+            //             if (error) {
+            //                 console.log(error);
+            //                 return res.status(409).json({ message: 'check you connection' });
+            //             } else {
+            //                 console.log('Email sent: ' + info.response);
+            //                 return res.status(200).json({ message: "a mail have been send to you confrim it" });
+            //             }
+            //         });
+            //     })
+            //     .catch(err => {
+            //         console.log(err)
+            //         return res.status(408).json({ message: 'check you connection' });
+            //     })
+        }
+*/
