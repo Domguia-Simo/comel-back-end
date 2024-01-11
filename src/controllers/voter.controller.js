@@ -130,9 +130,9 @@ exports.Votes = async (req, res) => {
             verificationCode += temp
         }
         const voters = await Voter.findOne({
-            'name': name,
-            'email': email,
-            'class': classe,
+            'name': name.toLowerCase(),
+            'email': email.toLowerCase(),
+            'class': classe.toUpperCase(),
         });
         // console.log(voters)
         if (voters) {
@@ -186,11 +186,11 @@ exports.Votes = async (req, res) => {
                             });
                             const mailOptions = {
                                 from: process.env.SENDER_EMAIL,
-                                to: voterModel.email,
-                                subject: 'Welcome To AICS',
+                                to: email.toLowerCase(),
+                                subject: 'Please comfrim you votes for AICS comel election',
                                 // html: mailMessages('create-personnel', { randomPassword, name }),
                                 // html: `<h1>Ander</h1>`,
-                                text: `Your verification code is ${verificationCode}`,
+                                text: `Your verification code for comel election is ${verificationCode}`,
                             };
                             await transporter.sendMail(mailOptions, (error, info) => {
                                 if (error) {
@@ -275,12 +275,12 @@ exports.validateVotes = async (req, res) => {
             code
         } = req.body
         if (!parseInt(code)) {
-            return res.status(409).json({ message: 'the verification code is a number' });
+            return res.status(400).json({ message: 'the verification code is a number' });
         }
         const voters = await Voter.findOne({
-            'name': name,
-            'email': email,
-            'class': classe,
+            'name': name.toLowerCase(),
+            'email': email.toLowerCase(),
+            'class': classe.toUpperCase(),
             'verificationCode': code,
         });
         console.log(voters);
@@ -293,13 +293,13 @@ exports.validateVotes = async (req, res) => {
                         return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
                     })
                     .catch(err => {
-                        return res.status(409).json({ message: 'check you connection' });
+                        return res.status(400).json({ message: 'check you connection' });
                     })
             } else {
-                return res.status(409).json({ message: 'Already voted', statusAdmin: true });
+                return res.status(400).json({ message: 'Already voted', statusAdmin: true });
             }
         } else {
-            return res.status(409).json({ message: 'Invalid code' });
+            return res.status(400).json({ message: 'Invalid code' });
         }
     } catch (error) {
         console.error(error);
@@ -309,7 +309,7 @@ exports.validateVotes = async (req, res) => {
 
 exports.VotesByAdmin = async (req, res) => {
     try {
-        console.log(req.body)
+        // console.log(req.body)
         let voterModel = {
             name: req.body.name,
             email: req.body.email,
