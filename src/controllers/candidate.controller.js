@@ -1,11 +1,15 @@
 const Candidate = require("../models/candidate");
+const adminModel = require('../models/Admin.js');
+const Election = require("../models/Election");
 
 
 exports.getCandidates = async (req, res) => {
     try {
         const candidates = await Candidate.find();
         console.log(candidates)
-        return res.status(200).json({ candidates: candidates });
+        const elections = await Election.findOne({ _id: candidates[0].election });
+        console.log(elections)
+        return res.status(200).json({ candidates: candidates, elections: elections });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error' });
@@ -149,6 +153,7 @@ exports.uploadCandidateImage = async (req, res) => {
 exports.deleteCandidate = async (req, res) => {
     let id = req.body.id || req.params.id;
     let admin = await adminModel.findOne({ _id: req.Id })
+    console.log(admin)
     if (admin) {
         if (admin.accountType === "SuperAdmin") {
             await Candidate.findByIdAndDelete(id)
@@ -156,12 +161,12 @@ exports.deleteCandidate = async (req, res) => {
                     return res.status(200).send({ message: 'Candidate deleted successfully', status: true });
                 })
                 .catch((err) => {
-                    return res.send({ message: "an error occur while deleting", status: false })
+                    return res.status(400).json({ message: "an error occur while deleting", status: false })
                 })
         } else {
-            return res.status(400).json({ message: 'Acess Denied' });
+            return res.status(400).json({ message: 'Acess Denied2' });
         }
     } else {
-        return res.status(400).json({ message: 'Acess Denied' });
+        return res.status(400).json({ message: 'Acess Denied1' });
     }
 };
