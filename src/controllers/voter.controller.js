@@ -139,7 +139,7 @@ exports.Votes = async (req, res) => {
                     const voters = await Voter.findOne({
                         'name': name.toUpperCase(),
                         // 'email': email.toLowerCase(),
-                        // 'class': classe.toUpperCase(),
+                        'class': classe.toUpperCase(),
                     });
                     // console.log(votes)
                     if (voters) {
