@@ -19,25 +19,25 @@ exports.electionResult = async (req, res) => {
         console.log(id)
         const elections = await Election.findOne({ _id: id });
         console.log(elections);
-        if (elections.endDate) {
-            const candidates = await Candidate.find({ election: id });
-            const voters = await Voter.find();
-            console.log(voters);
-            // const voters = await Voter.find({ "votes.election": id });
-            return res.status(200).json({
-                election: elections,
-                candidates: candidates,
-                voters: voters,
-                message: 'Election end'
-            });
-        } else {
-            return res.status(200).json({
-                election: [],
-                candidates: [],
-                voters: [],
-                message: 'Election not yet end'
-            });
-        }
+        // if (elections.endDate) {
+        const candidates = await Candidate.find({ election: id });
+        const voters = await Voter.find();
+        // console.log(voters);
+        // const voters = await Voter.find({ "votes.election": id });
+        return res.status(200).json({
+            election: elections,
+            candidates: candidates,
+            voters: voters,
+            message: 'Election end'
+        });
+        // } else {
+        //     return res.status(200).json({
+        //         election: [],
+        //         candidates: [],
+        //         voters: [],
+        //         message: 'Election not yet end'
+        //     });
+        // }
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Server error' });

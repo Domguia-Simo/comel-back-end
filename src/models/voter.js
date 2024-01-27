@@ -1,37 +1,11 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
-const VotesSchema = new Schema({
+const voterSchema = new Schema({
+    voterId: { type: String, require: true },
     candidate: { type: String, require: true },
     election: { type: String, require: true },
-    doneOn: { type: String, require: true },
-    approvedby: { type: String, require: true },
-    name: { type: String, require: true },
-}, { _id: false })
-
-const voterSchema = new Schema({
-    name: {
-        type: String,
-        require: true,
-        unique: true
-    },
-    status: {
-        type: String,
-        enum: ['VOTED', 'NOT VOTED'],
-        require: true,
-        default: "NOT VOTED"
-    },
-    email: {
-        type: String,
-        require: true,
-        match: /.+\@.+\..+/, // Simple regex for email validation
-        unique: true
-    },
-    votes: { type: VotesSchema, require: true },
-    verificationCode: { type: Number, require: true },
-    verificationTime: { type: Number, require: true },
-    class: { type: String, require: true },
-    createdAt: {
+    voteAt: {
         type: Date,
         default: Date.now,
     },

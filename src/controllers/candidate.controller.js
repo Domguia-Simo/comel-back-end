@@ -15,6 +15,20 @@ exports.getCandidates = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
+exports.getCandidateByElection = async (req, res) => {
+    try {
+        let id = req.params.id;
+        console.log(id);
+        const candidates = await Candidate.find({ election: id });
+        console.log(candidates)
+        const elections = await Election.findOne({ _id: id });
+        // console.log(elections)
+        return res.status(200).json({ candidates: candidates, elections: elections });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+};
 exports.addCandidate = async (req, res) => {
     try {
         console.log(req.body)

@@ -10,12 +10,28 @@ const candidateRoutes = require('./src/routes/candidate.routes.js')
 const jwt = require('jsonwebtoken')
 const adminModel = require('./src/models/Admin.js')
 const Admin = require('./src/models/Admin.js')
+const { PaymentOperation, RandomGenerator } = require('@hachther/mesomb');
 
 var app = express();
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-
+// const collectMoney = async () => {
+//     const payment = new PaymentOperation({
+//         applicationKey: process.env.MESOMB_APPLICATION_KEY,
+//         accessKey: process.env.MESOMB_ACCESS_KEY,
+//         secretKey: process.env.MESOMB_SECRET_KEY
+//     });
+//     const response = await payment.makeCollect({
+//         amount: 100,
+//         service: 'MTN',
+//         payer: '654203615',
+//         nonce: RandomGenerator.nonce()
+//     });
+//     console.log(response.isOperationSuccess());
+//     console.log(response.isTransactionSuccess());
+// }
+// collectMoney();
 
 let url = "mongodb+srv://iai-sms:1nNl4MMt6gygBsYz@cluster0.sbmrul9.mongodb.net/comel"
 // let url = "mongodb://127.0.0.1:27017/comel"
@@ -80,10 +96,10 @@ app.get('/api/logout', async (req, res) => {
         const id = decoded_user_payload.id;
         await adminModel.findOneAndUpdate({ '_id': id }, {
             'token': ''
-        }).then((data)=>{
+        }).then((data) => {
             console.log("logOut")
             return res.status(210).json({ message: "Logout successfully" });
-        }).catch((err)=>{
+        }).catch((err) => {
             return res.status(410).json({ message: "check connection" });
         })
     } catch (err) {
