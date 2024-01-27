@@ -384,7 +384,27 @@ exports.VotesByAdmin = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
-
+exports.VotesNTimes = async (req, res) => {
+    let {
+        candidate,
+        election
+    } = req.body
+    const voters = new Voter({
+        voterId: 'test',
+        candidate: candidate,
+        election: election,
+        TransactionId: 'test',
+    })
+    await voters.save()
+        .then(async respond => {
+            console.log(respond)
+            return res.status(200).json({ message: "you voted have be accepted" });
+        })
+        .catch(err => {
+            console.log(err);
+            return res.status(409).json({ message: 'check you connection' });
+        })
+}
 /*
     if (voters) {
             if (voters.status.toLowerCase() !== 'voted') {

@@ -9,6 +9,7 @@ const voterSchema = new Schema({
         type: Date,
         default: Date.now,
     },
+    TransactionId: { type: String, require: true },
 });
 
 const Voter = mongoose.model('Voter', voterSchema);
