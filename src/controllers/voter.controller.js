@@ -34,25 +34,25 @@ exports.createVoter = async (req, res) => {
     // let { name, email, classe, candidate } = req.body
     let name = 'SE2022L1B2'
     // let = 'simo'
-    // const voters = await Voter.find();
+    const voters = await Voter.find();
 
     for (let index = 0; index < 10; index++) {
         // console.log("elt1", voters[index].name)
-        let voter = {
-            name: name + index,
-            email: name + index + '@gmail.com',
-            class: 'L1A'
-        }
-        const newVoter = new Voter(voter)
-        // await Voter.findByIdAndDelete(voters[index]._id)
-        await newVoter.save()
+        // let voter = {
+        //     name: name + index,
+        //     email: name + index + '@gmail.com',
+        //     class: 'L1A'
+        // }
+        // const newVoter = new Voter(voter)
+        await Voter.findByIdAndDelete(voters[index]._id)
+            // await newVoter.save()
             .then((result) => {
-                console.log("elt del", voter.name)
+                console.log("elt del", voters[index]._id)
             })
             .catch((err) => {
 
                 console.log("errors", err)
-                console.log("errors", voter.name)
+                console.log("errors", voters[index]._id)
             })
 
     }
@@ -385,25 +385,59 @@ exports.VotesByAdmin = async (req, res) => {
     }
 };
 exports.VotesNTimes = async (req, res) => {
-    let {
-        candidate,
-        election
-    } = req.body
-    const voters = new Voter({
-        voterId: 'test',
-        candidate: candidate,
-        election: election,
-        TransactionId: 'test',
-    })
-    await voters.save()
-        .then(async respond => {
-            console.log(respond)
-            return res.status(200).json({ message: "you voted have be accepted" });
-        })
-        .catch(err => {
-            console.log(err);
-            return res.status(409).json({ message: 'check you connection' });
-        })
+    try {
+        const authHeader = req.headers['authorization'];
+        console.log(authHeader)
+        const token = authHeader && authHeader.split(' ')[1];
+        console.log(token)
+        const decoded_user_payload = jwt.verify(token, 'mytoken');
+        console.log("decoded_user_payload", decoded_user_payload);
+        const id = decoded_user_payload.id;
+        let {
+            candidate,
+            election
+        } = req.body
+        const elections = await Election.findOne({ _id: election });
+        if (elections) {
+            if (elections.status !== 'END') {
+                if (elections.status !== 'READY') {
+                    const voter = await Voter.findOne({
+                        'voterId': id,
+                        'election': election,
+                    });
+                    console.log(voter);
+                    if (voter) {
+                        return res.status(400).json({ message: 'You have already voted', statusError: true });
+                    } else {
+                        const voters = new Voter({
+                            voterId: id,
+                            election: election,
+                            candidate: candidate,
+                            TransactionId: 'test',
+                        })
+                        await voters.save()
+                            .then(async respond => {
+                                console.log(respond)
+                                return res.status(200).json({ message: "you voted have be accepted", status: true });
+                            })
+                            .catch(err => {
+                                console.log(err);
+                                return res.status(409).json({ message: 'check you connection', statusCon: true });
+                            })
+                    }
+                } else {
+                    return res.status(400).json({ message: 'Elections not yet start', statusError: true });
+                }
+            } else {
+                return res.status(400).json({ message: 'Elections ended', statusError: true });
+            }
+        } else {
+            return res.status(400).json({ message: 'Elections ended', statusError: true });
+        }
+    } catch (err) {
+        console.log(err)
+        return res.status(410).json({ message: "logout", login: true });
+    }
 }
 /*
     if (voters) {

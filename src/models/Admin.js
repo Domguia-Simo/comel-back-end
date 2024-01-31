@@ -4,7 +4,7 @@ const Schema = mongoose.Schema
 const adminSchema = new Schema({
     name: { type: String, require: true },
     token: { type: String, require: true },
-    accountType: { type: String, require: true },
+    accountType: { type: String, require: true, default: 'voter' },
     email: {
         type: String,
         require: true,

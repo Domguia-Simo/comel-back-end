@@ -53,7 +53,7 @@ app.use('/api/voter', voterRoutes)
 app.use('/api/candidate', candidateRoutes)
 app.get('/api/isLogin', async (req, res) => {
     try {
-        console.log(req.headers)
+        // console.log(req.headers)
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
 
@@ -63,12 +63,6 @@ app.get('/api/isLogin', async (req, res) => {
 
         const decoded_user_payload = jwt.verify(token, 'mytoken');
         let { id, name } = decoded_user_payload
-        let test = await Admin.findOne({
-            '_id': id,
-            'name': name,
-            // 'token': token,
-        });
-        console.log(test)
         let login = await Admin.findOne({
             '_id': id,
             'name': name,
@@ -90,7 +84,9 @@ app.get('/api/isLogin', async (req, res) => {
 app.get('/api/logout', async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
+        console.log(authHeader)
         const token = authHeader && authHeader.split(' ')[1];
+        console.log(token)
         const decoded_user_payload = jwt.verify(token, 'mytoken');
         console.log("decoded_user_payload", decoded_user_payload);
         const id = decoded_user_payload.id;
@@ -103,10 +99,41 @@ app.get('/api/logout', async (req, res) => {
             return res.status(410).json({ message: "check connection" });
         })
     } catch (err) {
+        console.log(err)
         return res.status(410).json({ message: "logout" });
     }
 })
+app.get('/api/isAdmin', async (req, res) => {
+    try {
+        // console.log(req.headers)
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
 
+        if (!token) {
+            return res.status(200).json({ isLogin: false });
+        }
+
+        const decoded_user_payload = jwt.verify(token, 'mytoken');
+        let { id, name } = decoded_user_payload
+        let login = await Admin.findOne({
+            '_id': id,
+            'name': name,
+            'token': token,
+            'accountType':"SuperAdmin",
+        });
+        if (login) {
+            req.UserName = name;
+            req.Id = id;
+            return res.status(200).json({ isAdmin: true, name: name });
+        } else {
+            return res.status(200).json({ isAdmin: false });
+        }
+    } catch (err) {
+        console.log(err)
+        return res.status(200).json({ isAdmin: false });
+    }
+
+})
 app.get("*", (req, res) => {
     return res.send("Not found")
 })
