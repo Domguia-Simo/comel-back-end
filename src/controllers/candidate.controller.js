@@ -7,7 +7,8 @@ exports.getCandidates = async (req, res) => {
     try {
         const candidates = await Candidate.find();
         console.log(candidates)
-        const elections = await Election.findOne({ _id: candidates[0].election });
+        const elections = await Election.find();
+        // const elections = await Election.findOne({ _id: candidates[0].election });
         console.log(elections)
         return res.status(200).json({ candidates: candidates, elections: elections });
     } catch (error) {
