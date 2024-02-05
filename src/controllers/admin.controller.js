@@ -63,7 +63,7 @@ const register = async (req, res) => {
         }
         const hash = await bcrypt.hash(password, 9);
         let admin = new adminModel({
-            name: name.toLowerCase(),
+            // name: name.toLowerCase(),
             email: email.toLowerCase(),
             password: hash
         })

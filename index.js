@@ -16,25 +16,27 @@ var app = express();
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-// const collectMoney = async () => {
-//     const payment = new PaymentOperation({
-//         applicationKey: process.env.MESOMB_APPLICATION_KEY,
-//         accessKey: process.env.MESOMB_ACCESS_KEY,
-//         secretKey: process.env.MESOMB_SECRET_KEY
-//     });
-//     const response = await payment.makeCollect({
-//         amount: 100,
-//         service: 'MTN',
-//         payer: '654203615',
-//         nonce: RandomGenerator.nonce()
-//     });
-//     console.log(response.isOperationSuccess());
-//     console.log(response.isTransactionSuccess());
-// }
-// collectMoney();
 
+const DepositeMoney = async () => {
+
+    const payment = new PaymentOperation({
+        applicationKey: process.env.MESOMB_APPLICATION_KEY,
+        accessKey: process.env.MESOMB_ACCESS_KEY,
+        secretKey: process.env.MESOMB_SECRET_KEY
+    });
+    const response = await payment.makeDeposit({
+        amount: 50,
+        service: 'MTN',
+        receiver: '652156526',
+        nonce: RandomGenerator.nonce()
+    });
+    console.log(response.isOperationSuccess());
+    console.log(response.isTransactionSuccess());
+}
 let url = "mongodb+srv://iai-sms:1nNl4MMt6gygBsYz@cluster0.sbmrul9.mongodb.net/comel"
+// let url = "mongodb+srv://AndersonKamsong:Ander39@@@cluster0.9rlip3r.mongodb.net/"
 // let url = "mongodb://127.0.0.1:27017/comel"
+
 mongoose.connect(url)
     .then((con) => {
         console.log("Connected to the db")
@@ -139,6 +141,8 @@ app.get("*", (req, res) => {
 })
 
 
-let server = app.listen(5000, () => {
-    console.log("Server running on port 5000")
+let server = app.listen(5000, async () => {
+    console.log("Server running on port 5000");
+    // await collectMoney();
+    // await DepositeMoney();
 })

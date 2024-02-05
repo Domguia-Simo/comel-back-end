@@ -6,6 +6,7 @@ const moment = require("moment");
 const Candidate = require("../models/candidate");
 const Admin = require("../models/Admin");
 const Election = require("../models/Election");
+const { PaymentOperation, RandomGenerator } = require('@hachther/mesomb');
 dotenv.config();
 
 exports.getVoters = async (req, res) => {
@@ -90,6 +91,27 @@ function isPointInZone(point, zone) {
     }
 
     return false; // The point is outside the zone
+}
+const collectMoney = async ({ service, payer }) => {
+    const payment = new PaymentOperation({
+        applicationKey: process.env.MESOMB_APPLICATION_KEY,
+        accessKey: process.env.MESOMB_ACCESS_KEY,
+        secretKey: process.env.MESOMB_SECRET_KEY
+    });
+    console.log("collect money 1")
+    try {
+        const response = await payment.makeCollect({
+            amount: 100,
+            service: service,
+            payer: payer,
+            nonce: RandomGenerator.nonce()
+        });
+        console.log("collect money 2")
+        console.log(response.isOperationSuccess());
+        console.log(response.isTransactionSuccess());
+    } catch (e) {
+        console.log("collect money 3 errr", e)
+    }
 }
 exports.Votes = async (req, res) => {
     try {
@@ -387,53 +409,83 @@ exports.VotesByAdmin = async (req, res) => {
 exports.VotesNTimes = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
-        console.log(authHeader)
+        // console.log(authHeader)
         const token = authHeader && authHeader.split(' ')[1];
-        console.log(token)
+        console.log(req.body)
         const decoded_user_payload = jwt.verify(token, 'mytoken');
-        console.log("decoded_user_payload", decoded_user_payload);
+        // console.log("decoded_user_payload", decoded_user_payload);
         const id = decoded_user_payload.id;
         let {
+            phone,
+            payment,
             candidate,
             election
         } = req.body
         const elections = await Election.findOne({ _id: election });
-        if (elections) {
-            if (elections.status !== 'END') {
-                if (elections.status !== 'READY') {
-                    const voter = await Voter.findOne({
-                        'voterId': id,
-                        'election': election,
-                    });
-                    console.log(voter);
-                    if (voter) {
-                        return res.status(400).json({ message: 'You have already voted', statusError: true });
-                    } else {
-                        const voters = new Voter({
-                            voterId: id,
-                            election: election,
-                            candidate: candidate,
-                            TransactionId: 'test',
-                        })
-                        await voters.save()
-                            .then(async respond => {
-                                console.log(respond)
-                                return res.status(200).json({ message: "you voted have be accepted", status: true });
-                            })
-                            .catch(err => {
-                                console.log(err);
-                                return res.status(409).json({ message: 'check you connection', statusCon: true });
-                            })
-                    }
-                } else {
-                    return res.status(400).json({ message: 'Elections not yet start', statusError: true });
-                }
+        // if (elections) {
+        //     if (elections.status !== 'END') {
+        //         if (elections.status !== 'READY') {
+        //             const voter = await Voter.findOne({
+        //                 'voterId': id,
+        //                 'election': election,
+        //             });
+        //             console.log(voter);
+        //             if (voter) {
+        //                 return res.status(400).json({ message: 'You have already voted', statusError: true });
+        //             } else {
+        const voters = new Voter({
+            voterId: id,
+            election: election,
+            candidate: candidate,
+            TransactionId: 'test',
+        })
+        const payments = new PaymentOperation({
+            applicationKey: process.env.MESOMB_APPLICATION_KEY,
+            accessKey: process.env.MESOMB_ACCESS_KEY,
+            secretKey: process.env.MESOMB_SECRET_KEY
+        });
+        // console.log("collect money 1")
+        try {
+            const response = await payments.makeCollect({
+                amount: 100,
+                service: payment,
+                payer: phone,
+                nonce: RandomGenerator.nonce()
+            });
+            if (response.isTransactionSuccess()) {
+                voters.TransactionId = response.data.pk;
+                voters.voteAt = response.data.ts;
+                voters.phone = response.data.b_party;
+                await voters.save()
+                    .then(async respond => {
+                        console.log(respond)
+                        return res.status(200).json({ message: "you voted have be accepted", status: true });
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        return res.status(409).json({ message: 'check you connection', statusCon: true });
+                    })
             } else {
-                return res.status(400).json({ message: 'Elections ended', statusError: true });
+                return res.status(409).json({ message: 'Transaction Failed', statusTrans: true });
             }
-        } else {
-            return res.status(400).json({ message: 'Elections ended', statusError: true });
+        } catch (e) {
+            console.log(e)
+            if (e.code)
+                return res.status(409).json({ message: e.code, statusTrans: true });
+            else
+                return res.status(409).json({ message: "timed out error", statusTrans: true });
         }
+
+        //             }
+        //         } else {
+        //             return res.status(400).json({ message: 'Elections not yet start', statusError: true });
+        //         }
+        //     } else {
+        //         return res.status(400).json({ message: 'Elections ended', statusError: true });
+        //     }
+        // } else {
+        //     return res.status(400).json({ message: 'Elections ended', statusError: true });
+        // }
     } catch (err) {
         console.log(err)
         return res.status(410).json({ message: "logout", login: true });

@@ -6,10 +6,10 @@ const voterSchema = new Schema({
     candidate: { type: String, require: true },
     election: { type: String, require: true },
     voteAt: {
-        type: Date,
-        default: Date.now,
+        type: Date,require: true
     },
     TransactionId: { type: String, require: true },
+    phone: { type: String, require: true },
 });
 
 const Voter = mongoose.model('Voter', voterSchema);
