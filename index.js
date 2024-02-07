@@ -44,7 +44,7 @@ mongoose.connect(url)
 
 
 app.get("/", (req, res) => {
-    return res.send("Welcome to comel backend")
+    return res.send("Welcome to iai award backend")
 })
 
 app.use("/api/election", electionRoutes)
