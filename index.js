@@ -33,9 +33,7 @@ const DepositeMoney = async () => {
     console.log(response.isOperationSuccess());
     console.log(response.isTransactionSuccess());
 }
-let url = "mongodb+srv://iai-sms:1nNl4MMt6gygBsYz@cluster0.sbmrul9.mongodb.net/comel"
-// let url = "mongodb+srv://AndersonKamsong:Ander39@@@cluster0.9rlip3r.mongodb.net/"
-// let url = "mongodb://127.0.0.1:27017/comel"
+let url = "mongodb+srv://anderson:Ander123@cluster0.a8nau1r.mongodb.net/E-voting"
 
 mongoose.connect(url)
     .then((con) => {

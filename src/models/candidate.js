@@ -7,7 +7,7 @@ const candidateSchema = new Schema({
     email: {
         type: String,
         require: true,
-        match: /.+\@.+\..+/, // Simple regex for email validation
+        // match: /.+\@.+\..+/, // Simple regex for email validation
         // unique: true
     },
     desc: { type: String, require: true },

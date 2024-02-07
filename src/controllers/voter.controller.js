@@ -430,7 +430,6 @@ exports.VotesNTimes = async (req, res) => {
             return res.status(400).json({ message: 'Elections ended', statusError: true });
         }
     } catch (err) {
-        // console.log(err)
         return res.status(410).json({ message: "logout", login: true });
     }
 }
