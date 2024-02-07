@@ -38,7 +38,7 @@ exports.addCandidate = async (req, res) => {
             if (admin.accountType === "SuperAdmin") {
                 let candidateModel = {
                     name: req.body.name,
-                    email: req.body.email,
+                    email: req.body.name,
                     desc: req.body.desc,
                     phone: req.body.phone,
                     class: req.body.class,
