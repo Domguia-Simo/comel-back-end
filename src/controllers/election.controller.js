@@ -9,16 +9,16 @@ exports.getElections = async (req, res) => {
         const elections = await Election.find();
         return res.status(200).json({ election: elections });
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
 exports.electionResult = async (req, res) => {
     try {
         let id = req.body.id || req.params.id;
-        console.log(id)
+        // console.log(id)
         const elections = await Election.findOne({ _id: id });
-        console.log(elections);
+        // console.log(elections);
         // if (elections.endDate) {
         const candidates = await Candidate.find({ election: id });
         const voters = await Voter.find();
@@ -39,19 +39,19 @@ exports.electionResult = async (req, res) => {
         //     });
         // }
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
 exports.createElection = async (req, res) => {
-    console.log(req.body)
+    // console.log(req.body)
     // const electionSchema = Joi.object({
     //     title: Joi.string().required(),
     // });
     const election = {
         title: req.body.title,
     }
-    console.log(election);
+    // console.log(election);
     // const { error } = electionSchema.validate(election);
     // if (error)
     //     return res.status(500).send(error);
@@ -75,14 +75,14 @@ exports.createElection = async (req, res) => {
 };
 exports.closeElection = async (req, res) => {
     let id = req.params.id
-    console.log(id)
+    // console.log(id)
     let admin = await adminModel.findOne({ _id: req.Id })
     if (admin) {
         if (admin.accountType === "SuperAdmin") {
             const election = await Election.findById(id);
-            console.log(election)
+            // console.log(election)
             if (election) {
-                if (!election.endDate) {
+                if (!election.endDate && election.status === 'OCCURRING' ) {
                     try {
                         election.status = 'END';
                         election.endDate = new Date
@@ -98,7 +98,7 @@ exports.closeElection = async (req, res) => {
                         return res.send({ message: "Access Denied." })
                     }
                 } else {
-                    return res.send({ message: "election already ended", status: false })
+                    return res.send({ message: "election already ended or not yet start", status: false })
                 }
             } else {
                 return res.send({ message: "election not more avaliable", status: false })
@@ -113,12 +113,12 @@ exports.closeElection = async (req, res) => {
 exports.startElection = async (req, res) => {
     // console.log(req.body)
     let id = req.params.id
-    console.log(id)
+    // console.log(id)
     let admin = await adminModel.findOne({ _id: req.Id })
     if (admin) {
         if (admin.accountType === "SuperAdmin") {
             const election = await Election.findById(id);
-            console.log(election)
+            // console.log(election)
             if (election) {
                 if (!election.stateDate) {
                     try {
@@ -148,7 +148,7 @@ exports.startElection = async (req, res) => {
     }
 }
 exports.deleteElection = async (req, res) => {
-    console.log(req.Id)
+    // console.log(req.Id)
     let id = req.body.id || req.params.id;
     let admin = await adminModel.findOne({ _id: req.Id })
     if (admin) {

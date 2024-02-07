@@ -34,7 +34,7 @@ const login = async (req, res) => {
 
     }
     catch (e) {
-        console.log(e)
+        // console.log(e)
         return res.status(500).json({ error: 'server error' })
     }
 
@@ -42,7 +42,7 @@ const login = async (req, res) => {
 const register = async (req, res) => {
     try {
         let { name, email, password, confirmPassword } = req.body
-        console.log(req.body)
+        // console.log(req.body)
         if (!validator.isEmail(email)) {
             return res.status(400).send({ message: 'Invalid email.' });
         }
@@ -69,17 +69,17 @@ const register = async (req, res) => {
         })
         admin.save()
             .then(respond => {
-                console.log(respond)
+                // console.log(respond)
                 return res.status(200).json({ message: 'Voter created successfully' })
             })
             .catch(err => {
-                console.log(err)
+                // console.log(err)
                 return res.status(409).json({ message: 'check you connection' });
             })
 
     }
     catch (e) {
-        console.log(e)
+        // console.log(e)
         return res.status(500).json({ error: 'server error' })
     }
 
@@ -87,7 +87,7 @@ const register = async (req, res) => {
 const registerAdmin = async (req, res) => {
     try {
         let { name, email, password } = req.body
-        console.log(req.body)
+        // console.log(req.body)
         const existingAdmin = await adminModel.findOne({ 'email': email });
         if (existingAdmin) {
             return res.status(409).send({ message: 'Admin Email already in use.' });
@@ -103,11 +103,11 @@ const registerAdmin = async (req, res) => {
                 })
                 admin.save()
                     .then(respond => {
-                        console.log(respond)
+                        // console.log(respond)
                         return res.status(200).json({ message: 'admin created successfully' })
                     })
                     .catch(err => {
-                        console.log(err)
+                        // console.log(err)
                         return res.status(409).json({ message: 'check you connection' });
                     })
             } else {
@@ -118,7 +118,7 @@ const registerAdmin = async (req, res) => {
         }
     }
     catch (e) {
-        console.log(e)
+        // console.log(e)
         return res.status(500).json({ error: 'server error' })
     }
 
@@ -128,7 +128,7 @@ const getAllUsers = async (req, res) => {
         const admins = await adminModel.find();
         return res.status(200).json({ admins: admins });
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
 }

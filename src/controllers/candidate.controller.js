@@ -6,10 +6,10 @@ const Election = require("../models/Election");
 exports.getCandidates = async (req, res) => {
     try {
         const candidates = await Candidate.find();
-        console.log(candidates)
+        // console.log(candidates)
         const elections = await Election.find();
         // const elections = await Election.findOne({ _id: candidates[0].election });
-        console.log(elections)
+        // console.log(elections)
         return res.status(200).json({ candidates: candidates, elections: elections });
     } catch (error) {
         console.error(error);
@@ -19,9 +19,9 @@ exports.getCandidates = async (req, res) => {
 exports.getCandidateByElection = async (req, res) => {
     try {
         let id = req.params.id;
-        console.log(id);
+        // console.log(id);
         const candidates = await Candidate.find({ election: id });
-        console.log(candidates)
+        // console.log(candidates)
         const elections = await Election.findOne({ _id: id });
         // console.log(elections)
         return res.status(200).json({ candidates: candidates, elections: elections });
@@ -32,7 +32,7 @@ exports.getCandidateByElection = async (req, res) => {
 };
 exports.addCandidate = async (req, res) => {
     try {
-        console.log(req.body)
+        // console.log(req.body)
         let admin = await adminModel.findOne({ _id: req.Id })
         if (admin) {
             if (admin.accountType === "SuperAdmin") {
@@ -51,14 +51,14 @@ exports.addCandidate = async (req, res) => {
                     return res.status(409).send({ message: 'Candidate Email already in use.', status: false });
                 }
                 const candidate = new Candidate(candidateModel)
-                console.log(candidate)
+                // console.log(candidate)
                 await candidate.save()
                     .then(async respond => {
-                        console.log(respond)
+                        // console.log(respond)
                         return res.status(200).json({ message: "Candidate created successfully", status: true });
                     })
                     .catch(err => {
-                        console.log(err)
+                        // console.log(err)
                         return res.status(409).json({ message: 'check you connection', status: false });
                     })
             } else {
@@ -75,7 +75,7 @@ exports.addCandidate = async (req, res) => {
 exports.editCandidates = async (req, res) => {
     try {
         let id = req.body.id || req.params.id;
-        console.log(req.body)
+        // console.log(req.body)
         let admin = await adminModel.findOne({ _id: req.Id })
         if (admin) {
             if (admin.accountType === "SuperAdmin") {
@@ -98,11 +98,11 @@ exports.editCandidates = async (req, res) => {
                     'election': candidateModel.election
                 })
                     .then(async respond => {
-                        console.log(respond)
+                        // console.log(respond)
                         return res.status(200).json({ message: "Candidate updated successfully", status: true });
                     })
                     .catch(err => {
-                        console.log(err)
+                        // console.log(err)
                         return res.status(409).json({ message: 'check you connection', status: false });
                     })
             } else {
@@ -120,21 +120,21 @@ exports.editCandidates = async (req, res) => {
 exports.uploadCandidateImage = async (req, res) => {
     const id = req.params.id;
     let imageFiles = req.files.images; // Assuming 'images' is the fieldname for the files
-    console.log(imageFiles);
-    console.log(req.params.id);
+    // console.log(imageFiles);
+    // console.log(req.params.id);
     try {
         const candidate = await Candidate.findOne({ _id: id });
-        console.log('candidate found:', candidate);
+        // console.log('candidate found:', candidate);
         if (!imageFiles) {
             return res.status(400).send('No files were uploaded.');
         }
         const currentDir = process.cwd();
-        console.log("currentDir", currentDir);
+        // console.log("currentDir", currentDir);
         const uploadDir = path.join(currentDir, 'Candidate', 'files', `${personnels._id}`);
         const thumbnailDir = path.join(currentDir, 'Candidate', 'thumbnails', `${personnels._id}`);
         fs.mkdirSync(uploadDir, { recursive: true });
         fs.mkdirSync(thumbnailDir, { recursive: true });
-        console.log("good here");
+        // console.log("good here");
         if (!Array.isArray(imageFiles)) {
             imageFiles = [imageFiles];
         }
@@ -151,16 +151,16 @@ exports.uploadCandidateImage = async (req, res) => {
         // Update the activity in the database
         await candidate.save()
             .then(async respond => {
-                console.log(respond)
+                // console.log(respond)
                 res.status(200).send({ message: 'Images uploaded and image names saved to the DB successfully.' });
             })
             .catch(err => {
-                console.log(err)
+                // console.log(err)
                 return res.status(409).json({ message: 'check you connection' });
             })
 
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.status(500).send({ error: 'An error occurred while processing images.' });
     }
 };
@@ -168,7 +168,7 @@ exports.uploadCandidateImage = async (req, res) => {
 exports.deleteCandidate = async (req, res) => {
     let id = req.body.id || req.params.id;
     let admin = await adminModel.findOne({ _id: req.Id })
-    console.log(admin)
+    // console.log(admin)
     if (admin) {
         if (admin.accountType === "SuperAdmin") {
             await Candidate.findByIdAndDelete(id)

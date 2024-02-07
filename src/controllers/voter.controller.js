@@ -6,7 +6,6 @@ const moment = require("moment");
 const Candidate = require("../models/candidate");
 const Admin = require("../models/Admin");
 const Election = require("../models/Election");
-const { PaymentOperation, RandomGenerator } = require('@hachther/mesomb');
 dotenv.config();
 
 exports.getVoters = async (req, res) => {
@@ -14,24 +13,24 @@ exports.getVoters = async (req, res) => {
         const voter = await Voter.find();
         return res.status(200).json({ voters: voter.length });
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
 exports.getVoterByClass = async (req, res) => {
     try {
         let classes = req.body.classes || req.params.classes
-        console.log(classes)
+        // console.log(classes)
         const voter = await Voter.find({ class: classes });
-        console.log(voter)
+        // console.log(voter)
         return res.status(200).json({ voters: voter });
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
 exports.createVoter = async (req, res) => {
-    console.log(req.body)
+    // console.log(req.body)
     // let { name, email, classe, candidate } = req.body
     let name = 'SE2022L1B2'
     // let = 'simo'
@@ -48,12 +47,12 @@ exports.createVoter = async (req, res) => {
         await Voter.findByIdAndDelete(voters[index]._id)
             // await newVoter.save()
             .then((result) => {
-                console.log("elt del", voters[index]._id)
+                // console.log("elt del", voters[index]._id)
             })
             .catch((err) => {
 
-                console.log("errors", err)
-                console.log("errors", voters[index]._id)
+                // console.log("errors", err)
+                // console.log("errors", voters[index]._id)
             })
 
     }
@@ -64,16 +63,16 @@ exports.createVoter = async (req, res) => {
     // }
     // for (let index = 20; index < voters.length; index++) {
     //     const voter = voters[index];
-    //     console.log(voter._id)
-    //     console.log(voter.name)
+        // console.log(voter._id)
+        // console.log(voter.name)
     //     if (voter.votes)
     //         voter.votes.election = '659b1e70d7a408d0cba7d535'
     //     // voter.status = "VOTED"
     //     await voter.save()
     //         .then(result => {
-    //             console.log("index" + index + "sAVE");
+                // console.log("index" + index + "sAVE");
     //         })
-    //         .catch(err => console.log(err));
+            // .catch(err => console.log(err));
 
     // }
     return res.status(200).send({ message: "Users created successfully 3" });
@@ -91,27 +90,6 @@ function isPointInZone(point, zone) {
     }
 
     return false; // The point is outside the zone
-}
-const collectMoney = async ({ service, payer }) => {
-    const payment = new PaymentOperation({
-        applicationKey: process.env.MESOMB_APPLICATION_KEY,
-        accessKey: process.env.MESOMB_ACCESS_KEY,
-        secretKey: process.env.MESOMB_SECRET_KEY
-    });
-    console.log("collect money 1")
-    try {
-        const response = await payment.makeCollect({
-            amount: 100,
-            service: service,
-            payer: payer,
-            nonce: RandomGenerator.nonce()
-        });
-        console.log("collect money 2")
-        console.log(response.isOperationSuccess());
-        console.log(response.isTransactionSuccess());
-    } catch (e) {
-        console.log("collect money 3 errr", e)
-    }
 }
 exports.Votes = async (req, res) => {
     try {
@@ -184,26 +162,26 @@ exports.Votes = async (req, res) => {
                                         'name': decoded_user_payload.name,
                                         'token': token,
                                     });
-                                    console.log("login", login)
+                                    // console.log("login", login)
                                     if (login) {
                                         voters.votes.approvedby = decoded_user_payload.id
                                         voters.votes.name = decoded_user_payload.name
                                         voters.status = "VOTED";
-                                        console.log(voters)
+                                        // console.log(voters)
                                         await voters.save()
                                             .then(async respond => {
-                                                console.log(respond)
+                                                // console.log(respond)
                                                 return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
                                             })
                                             .catch(err => {
                                                 return res.status(408).json({ message: 'check you connection' });
                                             })
                                     } else {
-                                        console.log("not login")
+                                        // console.log("not login")
                                         return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
                                     }
                                 } catch (err) {
-                                    console.log(err)
+                                    // console.log(err)
                                     return res.status(400).json({ message: 'you session has exprie', statusLogin: true });
                                 }
                             } else {
@@ -212,7 +190,7 @@ exports.Votes = async (req, res) => {
                                 voters.votes.approvedby = 'ONLINE'
                                 await voters.save()
                                     .then(async respond => {
-                                        console.log(respond.name, ":", verificationCode)
+                                        // console.log(respond.name, ":", verificationCode)
                                         // Send the verification code to the user's email
                                         const transporter = nodemailer.createTransport({
                                             service: 'gmail',
@@ -231,16 +209,16 @@ exports.Votes = async (req, res) => {
                                         };
                                         await transporter.sendMail(mailOptions, (error, info) => {
                                             if (error) {
-                                                console.log(error);
+                                                // console.log(error);
                                                 return res.status(409).json({ message: 'check you connection' });
                                             } else {
-                                                console.log('Email sent: ' + info.response);
+                                                // console.log('Email sent: ' + info.response);
                                                 return res.status(200).json({ message: "a mail have been send to you confrim it", status: true });
                                             }
                                         });
                                     })
                                     .catch(err => {
-                                        console.log(err)
+                                        // console.log(err)
                                         return res.status(400).json({ message: 'check you connection email' });
                                     })
                             }
@@ -248,7 +226,7 @@ exports.Votes = async (req, res) => {
                             return res.status(400).json({ message: 'already Voted' });
                         }
                     } else {
-                        console.log('you are not Voter')
+                        // console.log('you are not Voter')
                         return res.status(400).json({ message: 'incorrect matricule' });
                         // let voter = {
                         //     name: voterModel.name,
@@ -262,7 +240,7 @@ exports.Votes = async (req, res) => {
                         // const newVoter = new Voter(voter)
                         // await newVoter.save()
                         //     .then(async respond => {
-                        //         console.log(respond.name, ":", verificationCode)
+                                // console.log(respond.name, ":", verificationCode)
                         //         // Send the verification code to the user's email
                         //         const transporter = nodemailer.createTransport({
                         //             service: 'gmail',
@@ -281,16 +259,16 @@ exports.Votes = async (req, res) => {
                         //         };
                         //         await transporter.sendMail(mailOptions, (error, info) => {
                         //             if (error) {
-                        //                 console.log(error);
+                                        console.log(error);
                         //                 return res.status(409).json({ message: 'check you connection' });
                         //             } else {
-                        //                 console.log('Email sent: ' + info.response);
+                                        console.log('Email sent: ' + info.response);
                         //                 return res.status(200).json({ message: "a mail have been send to you confrim it" });
                         //             }
                         //         });
                         //     })
                         //     .catch(err => {
-                        //         console.log(err)
+                                console.log(err)
                         //         return res.status(408).json({ message: 'check you connection' });
                         //     })
                     }
@@ -307,14 +285,14 @@ exports.Votes = async (req, res) => {
         //     return res.status(406).json({ message: 'you are not on campus', statusAdmin: true });
         // }
     } catch (error) {
-        console.log(error);
+        // console.log(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
 
 exports.validateVotes = async (req, res) => {
     try {
-        console.log(req.body)
+        // console.log(req.body)
         let { name,
             email,
             classe,
@@ -332,13 +310,13 @@ exports.validateVotes = async (req, res) => {
         // console.log(voters);
         if (voters) {
             let duration = moment().diff(moment(voters.verificationTime), 'minutes')
-            console.log("duration in mins", duration);
+            // console.log("duration in mins", duration);
             if (duration < 10) {
                 if (voters.status.toLowerCase() !== 'voted') {
                     voters.status = "VOTED";
                     await voters.save()
                         .then(async respond => {
-                            console.log(respond)
+                            // console.log(respond)
                             return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
                         })
                         .catch(err => {
@@ -354,7 +332,7 @@ exports.validateVotes = async (req, res) => {
             return res.status(400).json({ message: 'Invalid code' });
         }
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
@@ -388,7 +366,7 @@ exports.VotesByAdmin = async (req, res) => {
                 voters.status = "VOTED";
                 await voters.save()
                     .then(async respond => {
-                        console.log(respond)
+                        // console.log(respond)
                         return res.status(200).json({ message: "you voted have be accepted" });
                     })
                     .catch(err => {
@@ -402,216 +380,57 @@ exports.VotesByAdmin = async (req, res) => {
             return res.status(408).json({ message: 'Enter correct creatidential' });
         }
     } catch (error) {
-        console.error(error);
+        // console.error(error);
         return res.status(500).json({ message: 'Server error' });
     }
 };
 exports.VotesNTimes = async (req, res) => {
     try {
         const authHeader = req.headers['authorization'];
-        // console.log(authHeader)
         const token = authHeader && authHeader.split(' ')[1];
-        console.log(req.body)
         const decoded_user_payload = jwt.verify(token, 'mytoken');
-        // console.log("decoded_user_payload", decoded_user_payload);
         const id = decoded_user_payload.id;
         let {
-            phone,
-            payment,
             candidate,
             election
         } = req.body
         const elections = await Election.findOne({ _id: election });
-        // if (elections) {
-        //     if (elections.status !== 'END') {
-        //         if (elections.status !== 'READY') {
-        //             const voter = await Voter.findOne({
-        //                 'voterId': id,
-        //                 'election': election,
-        //             });
-        //             console.log(voter);
-        //             if (voter) {
-        //                 return res.status(400).json({ message: 'You have already voted', statusError: true });
-        //             } else {
-        const voters = new Voter({
-            voterId: id,
-            election: election,
-            candidate: candidate,
-            TransactionId: 'test',
-        })
-        const payments = new PaymentOperation({
-            applicationKey: process.env.MESOMB_APPLICATION_KEY,
-            accessKey: process.env.MESOMB_ACCESS_KEY,
-            secretKey: process.env.MESOMB_SECRET_KEY
-        });
-        // console.log("collect money 1")
-        try {
-            const response = await payments.makeCollect({
-                amount: 100,
-                service: payment,
-                payer: phone,
-                nonce: RandomGenerator.nonce()
-            });
-            if (response.isTransactionSuccess()) {
-                voters.TransactionId = response.data.pk;
-                voters.voteAt = response.data.ts;
-                voters.phone = response.data.b_party;
-                await voters.save()
-                    .then(async respond => {
-                        console.log(respond)
-                        return res.status(200).json({ message: "you voted have be accepted", status: true });
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        return res.status(409).json({ message: 'check you connection', statusCon: true });
-                    })
+        if (elections) {
+            if (elections.status !== 'END') {
+                if (elections.status !== 'READY') {
+                    const voter = await Voter.findOne({
+                        'voterId': id,
+                        'election': election,
+                    });
+                    if (voter) {
+                        return res.status(400).json({ message: 'You have already voted', statusError: true });
+                    } else {
+                        const voters = new Voter({
+                            voterId: id,
+                            election: election,
+                            candidate: candidate,
+                        })
+                        await voters.save()
+                            .then(async respond => {
+                                // console.log(respond)
+                                return res.status(200).json({ message: "you voted have be accepted", status: true });
+                            })
+                            .catch(err => {
+                                // console.log(err);
+                                return res.status(409).json({ message: 'check you connection', statusCon: true });
+                            })
+                    }
+                } else {
+                    return res.status(400).json({ message: 'Elections not yet start', statusError: true });
+                }
             } else {
-                return res.status(409).json({ message: 'Transaction Failed', statusTrans: true });
+                return res.status(400).json({ message: 'Elections ended', statusError: true });
             }
-        } catch (e) {
-            console.log(e)
-            if (e.code)
-                return res.status(409).json({ message: e.code, statusTrans: true });
-            else
-                return res.status(409).json({ message: "timed out error", statusTrans: true });
+        } else {
+            return res.status(400).json({ message: 'Elections ended', statusError: true });
         }
-
-        //             }
-        //         } else {
-        //             return res.status(400).json({ message: 'Elections not yet start', statusError: true });
-        //         }
-        //     } else {
-        //         return res.status(400).json({ message: 'Elections ended', statusError: true });
-        //     }
-        // } else {
-        //     return res.status(400).json({ message: 'Elections ended', statusError: true });
-        // }
     } catch (err) {
-        console.log(err)
+        // console.log(err)
         return res.status(410).json({ message: "logout", login: true });
     }
 }
-/*
-    if (voters) {
-            if (voters.status.toLowerCase() !== 'voted') {
-                voters.votes = votes;
-                voters.verificationCode = verificationCode;
-                voters.verificationTime = new Date;
-                if (token) {
-                    try {
-                        const decoded_user_payload = jwt.verify(token, 'mytoken');
-                        let login = await Admin.findOne({
-                            '_id': decoded_user_payload.id,
-                            'name': decoded_user_payload.name,
-                            'token': token,
-                        });
-                        console.log("login", login)
-                        if (login) {
-                            voters.votes.approvedby = decoded_user_payload.id
-                            voters.votes.name = decoded_user_payload.name
-                            voters.status = "VOTED";
-                            console.log(voters)
-                            await voters.save()
-                                .then(async respond => {
-                                    console.log(respond)
-                                    return res.status(200).json({ message: "you voted have be accepted", statusAdmin: true });
-                                })
-                                .catch(err => {
-                                    return res.status(408).json({ message: 'check you connection' });
-                                })
-                        } else {
-                            console.log("not login")
-                            return res.status(404).json({ message: 'you session has exprie', statusLogin: true });
-                        }
-                    } catch (err) {
-                        console.log(err)
-                        return res.status(400).json({ message: 'you session has exprie', statusLogin: true });
-                    }
-                } else {
-                    voters.votes.approvedby = 'ONLINE'
-                    console.log(voters)
-                    await voters.save()
-                        .then(async respond => {
-                            console.log(respond.name, ":", verificationCode)
-                            // Send the verification code to the user's email
-                            const transporter = nodemailer.createTransport({
-                                service: 'gmail',
-                                auth: {
-                                    user: process.env.SENDER_EMAIL,
-                                    pass: process.env.EMAIL_PASSWORD,
-                                },
-                            });
-                            const mailOptions = {
-                                from: process.env.SENDER_EMAIL,
-                                to: email.toLowerCase(),
-                                subject: 'Please comfrim you votes for AICS comel election',
-                                // html: mailMessages('create-personnel', { randomPassword, name }),
-                                // html: `<h1>Ander</h1>`,
-                                text: `Your verification code for comel election is ${verificationCode}`,
-                            };
-                            await transporter.sendMail(mailOptions, (error, info) => {
-                                if (error) {
-                                    console.log(error);
-                                    return res.status(409).json({ message: 'check you connection' });
-                                } else {
-                                    console.log('Email sent: ' + info.response);
-                                    return res.status(200).json({ message: "a mail have been send to you confrim it", status: true });
-                                }
-                            });
-                        })
-                        .catch(err => {
-                            console.log(err)
-                            return res.status(400).json({ message: 'check you connection email' });
-                        })
-                }
-            } else {
-                return res.status(400).json({ message: 'already Voted', statusAdmin: true });
-            }
-        } else {
-            console.log('you are not Voter')
-            return res.status(400).json({ message: 'incorrect matricule', statusAdmin: true });
-            // let voter = {
-            //     name: voterModel.name,
-            //     email: voterModel.email,
-            //     class: voterModel.class,
-            //     level: voterModel.level,
-            //     votes: votes,
-            //     verificationCode: verificationCode,
-            //     verificationTime: new Date
-            // }
-            // const newVoter = new Voter(voter)
-            // await newVoter.save()
-            //     .then(async respond => {
-            //         console.log(respond.name, ":", verificationCode)
-            //         // Send the verification code to the user's email
-            //         const transporter = nodemailer.createTransport({
-            //             service: 'gmail',
-            //             auth: {
-            //                 user: process.env.SENDER_EMAIL,
-            //                 pass: process.env.EMAIL_PASSWORD,
-            //             },
-            //         });
-            //         const mailOptions = {
-            //             from: process.env.SENDER_EMAIL,
-            //             to: voterModel.email,
-            //             subject: 'Welcome To AICS',
-            //             // html: mailMessages('create-personnel', { randomPassword, name }),
-            //             html: `<h1>Ander</h1>`,
-            //             text: `Your verification code is ${verificationCode}`,
-            //         };
-            //         await transporter.sendMail(mailOptions, (error, info) => {
-            //             if (error) {
-            //                 console.log(error);
-            //                 return res.status(409).json({ message: 'check you connection' });
-            //             } else {
-            //                 console.log('Email sent: ' + info.response);
-            //                 return res.status(200).json({ message: "a mail have been send to you confrim it" });
-            //             }
-            //         });
-            //     })
-            //     .catch(err => {
-            //         console.log(err)
-            //         return res.status(408).json({ message: 'check you connection' });
-            //     })
-        }
-*/
