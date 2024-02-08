@@ -14,15 +14,15 @@ const isLogin = async (req, res, next) => {
 
         // console.log(token)
         const decoded_user_payload = jwt.verify(token, 'mytoken');
-        let { id, name } = decoded_user_payload
+        let { id, email } = decoded_user_payload
 
         let login = await Admin.findOne({
             '_id': id,
-            'name': name,
+            'email': email,
             'token': token,
         });
         if (login) {
-            req.UserName = name;
+            req.UserEmail = email;
             req.Id = id;
             next();
         } else {

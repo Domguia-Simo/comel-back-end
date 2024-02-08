@@ -2,6 +2,8 @@ const adminModel = require('../models/Admin.js')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt');
 const validator = require('validator');
+const nodemailer = require("nodemailer");
+const moment = require("moment");
 
 const login = async (req, res) => {
     try {
@@ -19,13 +21,18 @@ const login = async (req, res) => {
             return res.status(401).json({ error: 'Invalid email or password.' });
         }
 
-        let token = jwt.sign({ id: admin._id, name: admin.name, accountType: admin.accountType }, 'mytoken')
+        let token = jwt.sign({ id: admin._id, email: admin.email, accountType: admin.accountType }, 'mytoken')
         // console.log(token)
 
         admin.token = token
         admin.save()
-            .then((result) => {
-                return res.status(200).json({ message: 'login successful', name: admin.name, token: token })
+            .then(async (result) => {
+                if (admin.status)
+                    return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: true })
+                else {
+                    return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: false })
+                }
+
             })
             .catch((err) => {
                 return res.status(401).json({ message: 'check your connection' })
@@ -68,12 +75,10 @@ const register = async (req, res) => {
             password: hash
         })
         admin.save()
-            .then(respond => {
-                // console.log(respond)
+            .then(async respond => {
                 return res.status(200).json({ message: 'Voter created successfully' })
             })
             .catch(err => {
-                // console.log(err)
                 return res.status(409).json({ message: 'check you connection' });
             })
 
@@ -81,6 +86,114 @@ const register = async (req, res) => {
     catch (e) {
         // console.log(e)
         return res.status(500).json({ error: 'server error' })
+    }
+
+}
+const verfiyAdmin = async (req, res) => {
+    try {
+        let {
+            code
+        } = req.body
+        if (!parseInt(code)) {
+            return res.status(400).json({ message: 'the verification code is a number' });
+        }
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+        // console.log(token)
+        if (!token) {
+            return res.status(200).json({ message: 'Your session has expire', isLogin: false });
+        }
+
+        const decoded_user_payload = jwt.verify(token, 'mytoken');
+        let { id, email } = decoded_user_payload
+        let admin = await adminModel.findOne({
+            '_id': id,
+            'email': email,
+            'token': token,
+            'code': code
+        });
+        console.log(decoded_user_payload)
+        if (admin) {
+            let duration = moment().diff(moment(admin.verificationTime), 'minutes');
+            if (duration < 10) {
+                admin.status = true
+                await admin.save()
+                    .then(async respond => {
+                        return res.status(200).json({ message: "you account have be verify successfully", statusAdmin: true, isLogin: true });
+                    })
+                    .catch(err => {
+                        return res.status(400).json({ message: 'check you connection', isLogin: true, statusError: true });
+                    })
+            } else {
+                return res.status(400).json({ message: 'you code has expired', isLogin: true, statusError: true });
+            }
+        } else {
+            return res.status(400).json({ message: 'Invalid code', isLogin: true, statusError: true });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error', statusError: true, isLogin: false });
+    }
+}
+const sendCode = async (req, res) => {
+    try {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(200).json({ message: 'Your session has expire', isLogin: false });
+        }
+
+        const decoded_user_payload = jwt.verify(token, 'mytoken');
+        let { id, email } = decoded_user_payload
+        console.log(decoded_user_payload)
+        let admin = await adminModel.findOne({
+            '_id': id,
+            'email': email,
+            'token': token,
+        });
+        if (admin) {
+            let verificationCode = ''
+            for (let i = 0; i < 6; i++) {
+                let temp = Math.floor(Math.random() * 10)
+                verificationCode += temp
+            }
+            console.log(verificationCode);
+            admin.code = verificationCode;
+            admin.verificationTime = new Date;
+            await admin.save()
+                .then(async respond => {
+                    const transporter = nodemailer.createTransport({
+                        service: 'gmail',
+                        auth: {
+                            user: process.env.SENDER_EMAIL,
+                            pass: process.env.EMAIL_PASSWORD,
+                        },
+                    });
+                    const mailOptions = {
+                        from: process.env.SENDER_EMAIL,
+                        to: email.toLowerCase(),
+                        subject: "verifier voter compte sur iai award de l'excellence",
+                        text: `Voter code de Verification sur notre plateforme est le ${verificationCode}`,
+                    };
+                    await transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            return res.status(409).json({ message: 'check you connection', isLogin: true });
+                        } else {
+                            return res.status(200).json({ message: "a mail have been send to you confrim it", isLogin: true, statusAdmin: true });
+                        }
+                    });
+                })
+                .catch(err => {
+                    console.log(err)
+                    return res.status(400).json({ message: 'check you connection', isLogin: true });
+                })
+        } else {
+            return res.status(400).json({ message: 'Your session has expire', isLogin: false });
+        }
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Server error' });
     }
 
 }
@@ -132,4 +245,5 @@ const getAllUsers = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 }
-module.exports = { login, register, getAllUsers }
+
+module.exports = { login, register, getAllUsers, sendCode, verfiyAdmin }

@@ -17,7 +17,9 @@ const adminSchema = new Schema({
     },
     passwordString: { type: String, require: true },
     phone: { type: String, require: true },
-    class: { type: String, require: true },
+    code: { type: Number, require: true },
+    verificationTime: { type: Date },
+    status: { type: Boolean, require: true, default: false },
     createdAt: {
         type: Date,
         default: Date.now,

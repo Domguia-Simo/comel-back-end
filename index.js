@@ -13,7 +13,26 @@ const Admin = require('./src/models/Admin.js')
 const { PaymentOperation, RandomGenerator } = require('@hachther/mesomb');
 
 var app = express();
-app.use(cors())
+const allowedOrigins = [
+    'http://localhost:3000', // Localhost for development
+    'localhost:5000', // Localhost for development
+    'https://iai-award-de-lexcellence.vercel.app',   // Replace with your production domain
+    'award-iai-bk.vercel.app',   // Replace with your production domain
+];
+
+// CORS options
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ["GET", "POST", "DELETE", "PATCH", "PUT"]
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
@@ -62,16 +81,16 @@ app.get('/api/isLogin', async (req, res) => {
         }
 
         const decoded_user_payload = jwt.verify(token, 'mytoken');
-        let { id, name } = decoded_user_payload
+        let { id, email } = decoded_user_payload
         let login = await Admin.findOne({
             '_id': id,
-            'name': name,
+            'email': email,
             'token': token,
         });
         if (login) {
-            req.UserName = name;
+            req.UserEmail = email;
             req.Id = id;
-            return res.status(200).json({ isLogin: true, name: name });
+            return res.status(200).json({ isLogin: true, email: email });
         } else {
             return res.status(200).json({ isLogin: false });
         }

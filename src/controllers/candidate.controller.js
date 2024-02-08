@@ -46,10 +46,10 @@ exports.addCandidate = async (req, res) => {
                     createdById: req.Id,
                     createdByName: req.UserName
                 }
-                const existingCandidate = await Candidate.findOne({ 'email': candidateModel.email });
-                if (existingCandidate) {
-                    return res.status(409).send({ message: 'Candidate Email already in use.', status: false });
-                }
+                // const existingCandidate = await Candidate.findOne({ 'email': candidateModel.email });
+                // if (existingCandidate) {
+                //     return res.status(409).send({ message: 'Candidate Email already in use.', status: false });
+                // }
                 const candidate = new Candidate(candidateModel)
                 // console.log(candidate)
                 await candidate.save()
