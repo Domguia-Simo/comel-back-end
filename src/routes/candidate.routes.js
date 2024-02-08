@@ -1,11 +1,11 @@
 
-const { addCandidate, uploadCandidateImage, deleteCandidate, editCandidates, getCandidates, getCandidateByElection } = require("../controllers/candidate.controller");
+const { addCandidate, uploadCandidateImage, deleteCandidate, editCandidates, getCandidates, getCandidateByElection, createCandidateM } = require("../controllers/candidate.controller");
 
 const express = require("express");
 const isLogin = require("../middleware/isLogin");
 const router = express.Router()
 
-
+// router.post("/createCandidateM", createCandidateM)
 router.get("/getCandidates", getCandidates);
 router.get("/getCandidateByElection/:id", getCandidateByElection);
 router.post("/addCandidate", isLogin, addCandidate);

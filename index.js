@@ -133,17 +133,17 @@ app.get('/api/isAdmin', async (req, res) => {
         }
 
         const decoded_user_payload = jwt.verify(token, 'mytoken');
-        let { id, name } = decoded_user_payload
+        let { id, email } = decoded_user_payload
         let login = await Admin.findOne({
             '_id': id,
-            'name': name,
+            'email': email,
             'token': token,
             'accountType':"SuperAdmin",
         });
         if (login) {
-            req.UserName = name;
+            req.UserEmail = email;
             req.Id = id;
-            return res.status(200).json({ isAdmin: true, name: name });
+            return res.status(200).json({ isAdmin: true, name: email });
         } else {
             return res.status(200).json({ isAdmin: false });
         }

@@ -23,14 +23,41 @@ const login = async (req, res) => {
 
         let token = jwt.sign({ id: admin._id, email: admin.email, accountType: admin.accountType }, 'mytoken')
         // console.log(token)
-
-        admin.token = token
+        let verificationCode = ''
+        for (let i = 0; i < 6; i++) {
+            let temp = Math.floor(Math.random() * 10)
+            verificationCode += temp
+        }
+        // console.log(verificationCode);
+        admin.code = verificationCode;
+        admin.verificationTime = new Date;
+        admin.token = token;
         admin.save()
             .then(async (result) => {
                 if (admin.status)
                     return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: true })
                 else {
-                    return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: false })
+                    const transporter = nodemailer.createTransport({
+                        service: 'gmail',
+                        auth: {
+                            user: process.env.SENDER_EMAIL,
+                            pass: process.env.EMAIL_PASSWORD,
+                        },
+                    });
+                    const mailOptions = {
+                        from: process.env.SENDER_EMAIL,
+                        to: email.toLowerCase(),
+                        subject: "verifier voter compte sur iai award de l'excellence",
+                        text: `Voter code de Verification sur notre plateforme est le ${verificationCode}`,
+                    };
+                    await transporter.sendMail(mailOptions, (error, info) => {
+                        if (error) {
+                            return res.status(409).json({ message: 'check you connection', isLogin: true });
+                        } else {
+                            return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: false })
+                            // return res.status(200).json({ message: "a mail have been send to you confrim it", isLogin: true, statusAdmin: true });
+                        }
+                    });
                 }
 
             })
