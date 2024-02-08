@@ -30,6 +30,59 @@ exports.getCandidateByElection = async (req, res) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
+exports.createCandidateM = async (req, res) => {
+    // console.log(req.body)
+    // let { name, email, classe, candidate } = req.body
+    let name = 'SE2022L1B2'
+    // let = 'simo'
+    // const voters = await Voter.find();
+    // let candName = [
+    //     "Mme Biboum",
+    //     "Mme Ipem",
+    //     "Mme Belinga",
+    //     "Mme Signe",
+    //     "Mme Onguene",
+    //     "Mme Ateba",
+    //     "Mme Amougouo",
+    //     "Mme Angounda",
+    //     "Mme Anga O",
+    //     "Mme Anga D",
+    //     "Mme Otabela ",
+    //     "Mme Togna",
+    //     "Mme Ateba",
+    // ];
+    // let candName = [
+    //     "Mr AGBOR",
+    //     "Mr EKITI",
+    //     "Mr FORMEKONG",
+    //     "Mr NDIFOR",
+    //     "Mr MBAPA",
+    //     "Mr MESSIO",
+    // ]
+    // for (let index = 0; index < candName.length; index++) {
+    //     let candidateModel = {
+    //         name: candName[index],
+    //         election: "65c2c7de09e64ae8491e6ea4",
+    //         // election: "65c2c7bc09e64ae8491e6e94",
+    //         createdById: "659b0872cc9c81026399dca2",
+    //         createdByName: "gaston",
+    //         desc: "  "
+    //     }
+    //     let candidate = new Candidate(candidateModel)
+    //     // console.log(candidate)
+    //     await candidate.save()
+    //         // await newVoter.save()
+    //         .then((result) => {
+    //             console.log("elt del", index)
+    //         })
+    //         .catch((err) => {
+    //             console.log("errors", err)
+    //             console.log("errors", index)
+    //         })
+
+    // }
+    return res.status(200).send({ message: "Users created successfully 3" });
+};
 exports.addCandidate = async (req, res) => {
     try {
         // console.log(req.body)
