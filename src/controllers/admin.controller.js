@@ -5,7 +5,7 @@ const validator = require('validator');
 const nodemailer = require("nodemailer");
 const moment = require("moment");
 
-const login = async (req, res) => {
+const loginNoSense = async (req, res) => {
     try {
         let { email, password } = req.body
         if (!email || !password) {
@@ -18,7 +18,7 @@ const login = async (req, res) => {
         }
         const validPassword = await bcrypt.compare(password, admin.password);
         if (!validPassword) {
-            return res.status(401).json({ error: 'Invalid email or password.' });
+            return res.status(401).json({ message: 'Invalid email or password.' });
         }
 
         let token = jwt.sign({ id: admin._id, email: admin.email, accountType: admin.accountType }, 'mytoken')
@@ -34,31 +34,31 @@ const login = async (req, res) => {
         admin.token = token;
         admin.save()
             .then(async (result) => {
-                if (admin.status)
-                    return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: true })
-                else {
-                    const transporter = nodemailer.createTransport({
-                        service: 'gmail',
-                        auth: {
-                            user: process.env.SENDER_EMAIL,
-                            pass: process.env.EMAIL_PASSWORD,
-                        },
-                    });
-                    const mailOptions = {
-                        from: process.env.SENDER_EMAIL,
-                        to: email.toLowerCase(),
-                        subject: "verifier voter compte sur iai award de l'excellence",
-                        text: `Voter code de Verification sur notre plateforme est le ${verificationCode}`,
-                    };
-                    await transporter.sendMail(mailOptions, (error, info) => {
-                        if (error) {
-                            return res.status(409).json({ message: 'check you connection', isLogin: true });
-                        } else {
-                            return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: false })
-                            // return res.status(200).json({ message: "a mail have been send to you confrim it", isLogin: true, statusAdmin: true });
-                        }
-                    });
-                }
+                // if (admin.status)
+                return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: true })
+                // else {
+                //     const transporter = nodemailer.createTransport({
+                //         service: 'gmail',
+                //         auth: {
+                //             user: process.env.SENDER_EMAIL,
+                //             pass: process.env.EMAIL_PASSWORD,
+                //         },
+                //     });
+                //     const mailOptions = {
+                //         from: process.env.SENDER_EMAIL,
+                //         to: email.toLowerCase(),
+                //         subject: "verifier voter compte sur iai award de l'excellence",
+                //         text: `Voter code de Verification sur notre plateforme est le ${verificationCode}`,
+                //     };
+                //     await transporter.sendMail(mailOptions, (error, info) => {
+                //         if (error) {
+                //             return res.status(409).json({ message: 'check you connection', isLogin: true });
+                //         } else {
+                //             return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: false })
+                //             // return res.status(200).json({ message: "a mail have been send to you confrim it", isLogin: true, statusAdmin: true });
+                //         }
+                //     });
+                // }
 
             })
             .catch((err) => {
@@ -69,9 +69,50 @@ const login = async (req, res) => {
     }
     catch (e) {
         // console.log(e)
-        return res.status(500).json({ error: 'server error' })
+        return res.status(500).json({ message: 'server error' })
     }
 
+}
+const login = async (req, res) => {
+    try {
+        let { email, name } = req.body
+        // console.log(req.body)
+        if (!validator.isEmail(email)) {
+            return res.status(400).send({ message: 'Invalid email.' });
+        }
+        const existingAdmin = await adminModel.findOne({ 'email': email });
+        if (existingAdmin) {
+            let token = jwt.sign({ id: existingAdmin._id, email: existingAdmin.email, accountType: existingAdmin.accountType }, 'mytoken')
+            existingAdmin.token = token;
+            existingAdmin.save()
+                .then(async (result) => {
+                    return res.status(200).json({ message: 'login successful', name: existingAdmin.name, token: token, status: true })
+                })
+                .catch((err) => {
+                    return res.status(401).json({ message: 'check your connection' })
+                })
+
+        } else {
+            let admin = new adminModel({
+                email: email.toLowerCase(),
+                name:name
+            })
+            let token = jwt.sign({ id: admin._id, email: admin.email, accountType: admin.accountType }, 'mytoken')
+            admin.status = false;
+            admin.token = token;
+            admin.save()
+                .then(async respond => {
+                    return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: true })
+                })
+                .catch(err => {
+                    return res.status(409).json({ message: 'check you connection' });
+                })
+        }
+    }
+    catch (e) {
+        // console.log(e)
+        return res.status(500).json({ error: 'server error' })
+    }
 }
 const register = async (req, res) => {
     try {
@@ -82,33 +123,84 @@ const register = async (req, res) => {
         }
         const existingAdmin = await adminModel.findOne({ 'email': email });
         if (existingAdmin) {
-            return res.status(409).send({ message: 'Admin Email already in use.' });
-        }
+            if (existingAdmin == null) {
+                return res.status(401).json({ message: 'Invalid email or password' })
+            }
+            const validPassword = await bcrypt.compare(password, existingAdmin.password);
+            if (!validPassword) {
+                return res.status(401).json({ message: 'Invalid email or password.' });
+            }
 
-        // Password validation
-        if (password.length < 8) {
-            return res.status(400).send({ message: 'Password must be at least 8 characters.' });
-        }
-        if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-            return res.status(400).send({ message: 'Password must contain at least one lowercase letter, one uppercase letter, and one digit.' });
-        }
-        if (password !== confirmPassword) {
-            return res.status(400).send({ message: 'Passwords do not match.' });
-        }
-        const hash = await bcrypt.hash(password, 9);
-        let admin = new adminModel({
-            // name: name.toLowerCase(),
-            email: email.toLowerCase(),
-            password: hash
-        })
-        admin.save()
-            .then(async respond => {
-                return res.status(200).json({ message: 'Voter created successfully' })
-            })
-            .catch(err => {
-                return res.status(409).json({ message: 'check you connection' });
-            })
+            let token = jwt.sign({ id: existingAdmin._id, email: existingAdmin.email, accountType: existingAdmin.accountType }, 'mytoken')
+            // console.log(token)
+            let verificationCode = ''
+            for (let i = 0; i < 6; i++) {
+                let temp = Math.floor(Math.random() * 10)
+                verificationCode += temp
+            }
+            // console.log(verificationCode);
+            existingAdmin.code = verificationCode;
+            existingAdmin.verificationTime = new Date;
+            existingAdmin.token = token;
+            existingAdmin.save()
+                .then(async (result) => {
+                    // if (admin.status)
+                    return res.status(200).json({ message: 'login successful', name: existingAdmin.name, token: token, status: true })
+                    // else {
+                    //     const transporter = nodemailer.createTransport({
+                    //         service: 'gmail',
+                    //         auth: {
+                    //             user: process.env.SENDER_EMAIL,
+                    //             pass: process.env.EMAIL_PASSWORD,
+                    //         },
+                    //     });
+                    //     const mailOptions = {
+                    //         from: process.env.SENDER_EMAIL,
+                    //         to: email.toLowerCase(),
+                    //         subject: "verifier voter compte sur iai award de l'excellence",
+                    //         text: `Voter code de Verification sur notre plateforme est le ${verificationCode}`,
+                    //     };
+                    //     await transporter.sendMail(mailOptions, (error, info) => {
+                    //         if (error) {
+                    //             return res.status(409).json({ message: 'check you connection', isLogin: true });
+                    //         } else {
+                    //             return res.status(200).json({ message: 'login successful', name: admin.name, token: token, status: false })
+                    //             // return res.status(200).json({ message: "a mail have been send to you confrim it", isLogin: true, statusAdmin: true });
+                    //         }
+                    //     });
+                    // }
 
+                })
+                .catch((err) => {
+                    return res.status(401).json({ message: 'check your connection' })
+                })
+
+        } else {
+            // Password validation
+            if (password.length < 8) {
+                return res.status(400).send({ message: 'Password must be at least 8 characters.' });
+            }
+            if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+                return res.status(400).send({ message: 'Password must contain at least one lowercase letter, one uppercase letter, and one digit.' });
+            }
+            if (password !== confirmPassword) {
+                return res.status(400).send({ message: 'Passwords do not match.' });
+            }
+            const hash = await bcrypt.hash(password, 9);
+            let admin = new adminModel({
+                // name: name.toLowerCase(),
+                email: email.toLowerCase(),
+                password: hash
+            })
+            admin.status = false;
+            admin.save()
+                .then(async respond => {
+                    return res.status(200).json({ message: 'Voter created successfully' })
+                })
+                .catch(err => {
+                    return res.status(409).json({ message: 'check you connection' });
+                })
+        }
     }
     catch (e) {
         // console.log(e)

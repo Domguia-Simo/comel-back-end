@@ -52,35 +52,57 @@ exports.createCandidateM = async (req, res) => {
     //     "Mme Ateba",
     // ];
     // let candName = [
+    //     "Mr EKWALA",
+    //     "Mr Mengueme",
+    //     "Mr Wambo",
+    //     "Mr Sallabiesis",
+    //     "Mr Tayoutsop",
+    // ]
+    // let candName = [
     //     "Mr AGBOR",
     //     "Mr EKITI",
     //     "Mr FORMEKONG",
     //     "Mr NDIFOR",
     //     "Mr MBAPA",
     //     "Mr MESSIO",
+    //     "Mr NGUH PRINCE",
+    // "Dr DJOUSSE",
+    //     "Mr NDENGE",
     // ]
-    // for (let index = 0; index < candName.length; index++) {
-    //     let candidateModel = {
-    //         name: candName[index],
-    //         election: "65c2c7de09e64ae8491e6ea4",
-    //         // election: "65c2c7bc09e64ae8491e6e94",
-    //         createdById: "659b0872cc9c81026399dca2",
-    //         createdByName: "gaston",
-    //         desc: "  "
-    //     }
-    //     let candidate = new Candidate(candidateModel)
-    //     // console.log(candidate)
-    //     await candidate.save()
-    //         // await newVoter.save()
-    //         .then((result) => {
-    //             console.log("elt del", index)
-    //         })
-    //         .catch((err) => {
-    //             console.log("errors", err)
-    //             console.log("errors", index)
-    //         })
+    // let candName = [
+    //     "Mme ONGUENE",
+    //     "Mme TCHOUTOUO",
+    //     "Mme EMMANUELLA"
+    // ]
+    let candName = [
+        "Mr Ongolo",
+        "Mr Ngono",
+        "Mr  Betougy ",
+        "Mme Koum Bom",
+        "Mr Bossogo",
+    ]
+    for (let index = 0; index < candName.length; index++) {
+        let candidateModel = {
+            name: candName[index],
+            election: "65c2cab509e64ae8491e6f2c",
+            // election: "65c2c7bc09e64ae8491e6e94",
+            createdById: "659b0872cc9c81026399dca2",
+            createdByName: "gaston",
+            desc: "  "
+        }
+        let candidate = new Candidate(candidateModel)
+        // console.log(candidate)
+        await candidate.save()
+            // await newVoter.save()
+            .then((result) => {
+                console.log("elt del", index)
+            })
+            .catch((err) => {
+                console.log("errors", err)
+                console.log("errors", index)
+            })
 
-    // }
+    }
     return res.status(200).send({ message: "Users created successfully 3" });
 };
 exports.addCandidate = async (req, res) => {

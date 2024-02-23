@@ -5,7 +5,7 @@ const express = require("express");
 const isLogin = require("../middleware/isLogin");
 const router = express.Router()
 
-// router.post("/createCandidateM", createCandidateM)
+router.post("/createCandidateM", createCandidateM)
 router.get("/getCandidates", getCandidates);
 router.get("/getCandidateByElection/:id", getCandidateByElection);
 router.post("/addCandidate", isLogin, addCandidate);
