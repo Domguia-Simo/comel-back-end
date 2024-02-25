@@ -7,6 +7,7 @@ const Candidate = require("../models/candidate");
 const Admin = require("../models/Admin");
 const Election = require("../models/Election");
 const { PaymentOperation, RandomGenerator } = require('@hachther/mesomb');
+const retry = require('retry');
 dotenv.config();
 
 exports.getVoters = async (req, res) => {
@@ -424,37 +425,98 @@ exports.VotesNTimes = async (req, res) => {
             secretKey: process.env.MESOMB_SECRET_KEY
         });
         // console.log("collect money 1")
-        try {
-            const response = await payments.makeCollect({
-                amount: 100,
-                service: payment,
-                payer: phone,
-                nonce: RandomGenerator.nonce()
-            });
-            if (response.isTransactionSuccess()) {
-                voters.TransactionId = response.data.pk;
-                voters.voteAt = response.data.ts;
-                voters.phone = response.data.b_party;
-                await voters.save()
-                    .then(async respond => {
-                        console.log(respond)
-                        return res.status(200).json({ message: "you voted have be accepted", status: true });
-                    })
-                    .catch(err => {
-                        console.log(err);
-                        return res.status(409).json({ message: 'check you connection', statusCon: true });
-                    })
-            } else {
-                return res.status(409).json({ message: 'Transaction Failed', statusTrans: true });
-            }
-        } catch (e) {
-            console.log(e)
-            if (e.code)
-                return res.status(409).json({ message: e.code, statusTrans: true });
-            else
-                return res.status(409).json({ message: "timed out error", statusTrans: true });
-        }
 
+        // Wrap the payment code with retry logic
+        const operation = retry.operation({
+            retries: 3, // Number of retry attempts
+            factor: 2, // Exponential backoff factor
+            minTimeout: 1000, // Minimum delay between retries in milliseconds
+            maxTimeout: 3000, // Maximum delay between retries in milliseconds
+        });
+        const transactionTimeout = 15000;
+        operation.attempt(async (currentAttempt) => {
+            try {
+                const transactionTimer = setTimeout(() => {
+                    operation.stop(); // Stop the retry attempts
+                    return res.status(409).json({ message: 'Transaction cancelled due to timeout.', statusCon: true });
+                    // console.log('');
+                }, transactionTimeout);
+                const response = await payments.makeCollect({
+                    amount: 100,
+                    service: payment,
+                    payer: phone,
+                    nonce: RandomGenerator.nonce(),
+                });
+
+                if (response.isTransactionSuccess()) {
+                    voters.TransactionId = response.data.pk;
+                    voters.voteAt = response.data.ts;
+                    voters.phone = response.data.b_party;
+
+                    await voters.save()
+                        .then(async respond => {
+                            console.log(respond)
+                            return res.status(200).json({ message: "you voted have be accepted", status: true });
+                        })
+                        .catch(err => {
+                            console.log(err);
+                            return res.status(409).json({ message: 'check you connection', statusCon: true });
+                        })
+
+                } else {
+                    return res
+                        .status(409)
+                        .json({ message: 'Transaction Failed', statusTrans: true });
+                }
+            } catch (e) {
+                console.log(e);
+                if (e.code) {
+                    return res.status(409).json({ message: e.code, statusTrans: true });
+                } else {
+                    // Retry if the error is a timeout error
+                    if (operation.retry(e)) {
+                        console.log(`Attempt ${currentAttempt} failed. Retrying...`);
+                        return;
+                    }
+
+                    console.log('Request failed after multiple attempts:', e);
+                    return res
+                        .status(409)
+                        .json({ message: 'Timed out error', statusTrans: true });
+                }
+            }
+        });
+        // try {
+        //     const response = await payments.makeCollect({
+        //         amount: 100,
+        //         service: payment,
+        //         payer: phone,
+        //         nonce: RandomGenerator.nonce()
+        //     });
+        //     if (response.isTransactionSuccess()) {
+        //         voters.TransactionId = response.data.pk;
+        //         voters.voteAt = response.data.ts;
+        //         voters.phone = response.data.b_party;
+        //         await voters.save()
+        //             .then(async respond => {
+        //                 console.log(respond)
+        //                 return res.status(200).json({ message: "you voted have be accepted", status: true });
+        //             })
+        //             .catch(err => {
+        //                 console.log(err);
+        //                 return res.status(409).json({ message: 'check you connection', statusCon: true });
+        //             })
+        //     } else {
+        //         return res.status(409).json({ message: 'Transaction Failed', statusTrans: true });
+        //     }
+        // } catch (e) {
+        //     console.log(e)
+        //     if (e.code)
+        //         return res.status(409).json({ message: e.code, statusTrans: true });
+        //     else
+        //         return res.status(409).json({ message: "timed out error", statusTrans: true });
+        // }
+        /** */
         //             }
         //         } else {
         //             return res.status(400).json({ message: 'Elections not yet start', statusError: true });
