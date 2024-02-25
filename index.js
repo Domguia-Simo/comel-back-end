@@ -44,9 +44,9 @@ const DepositeMoney = async () => {
         secretKey: process.env.MESOMB_SECRET_KEY
     });
     const response = await payment.makeDeposit({
-        amount: 50,
+        amount: 200,
         service: 'MTN',
-        receiver: '652156526',
+        receiver: '651558567',
         nonce: RandomGenerator.nonce()
     });
     console.log(response.isOperationSuccess());
