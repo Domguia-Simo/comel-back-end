@@ -433,7 +433,7 @@ exports.VotesNTimes = async (req, res) => {
             minTimeout: 1000, // Minimum delay between retries in milliseconds
             maxTimeout: 3000, // Maximum delay between retries in milliseconds
         });
-        const transactionTimeout = 15000;
+        const transactionTimeout = 25000;
         operation.attempt(async (currentAttempt) => {
             try {
                 const transactionTimer = setTimeout(() => {
