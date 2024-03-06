@@ -6,6 +6,7 @@ const moment = require("moment");
 const Candidate = require("../models/candidate");
 const Admin = require("../models/Admin");
 const Election = require("../models/Election");
+// const { PaymentOperation, RandomGenerator } = require('../../payment/mesomb');
 const { PaymentOperation, RandomGenerator } = require('@hachther/mesomb');
 const fetch = require('node-fetch');
 dotenv.config();
@@ -419,9 +420,10 @@ exports.VotesNTimes = async (req, res) => {
         // console.log(authHeader)
         const token = authHeader && authHeader.split(' ')[1];
         console.log(req.body)
-        const decoded_user_payload = jwt.verify(token, 'mytoken');
+        // const decoded_user_payload = jwt.verify(token, 'mytoken');
         // console.log("decoded_user_payload", decoded_user_payload);
-        const id = decoded_user_payload.id;
+        // const id = decoded_user_payload.id;
+        const id = "testid";
         let {
             phone,
             payment,
@@ -440,76 +442,108 @@ exports.VotesNTimes = async (req, res) => {
         //             if (voter) {
         //                 return res.status(400).json({ message: 'You have already voted', statusError: true });
         //             } else {
+        console.log("voter creating")
         const voters = new Voter({
             voterId: id,
             election: election,
             candidate: candidate,
             TransactionId: 'test',
         })
-        // const payments = new PaymentOperation({
-        //     applicationKey: process.env.MESOMB_APPLICATION_KEY,
-        //     accessKey: process.env.MESOMB_ACCESS_KEY,
-        //     secretKey: process.env.MESOMB_SECRET_KEY
-        // });
-        // console.log("collect money 1")
+
         try {
-            // const response = await payments.makeCollect({
-            //     amount: 100,
-            //     service: payment,
-            //     payer: phone,
-            //     nonce: RandomGenerator.nonce()
-            // });
+            const attemptPayment = async (id) => {
+                try {
+                    var myHeaders = {
+                        'Authorization': 'Token c41627139421ae9347ee7f8b0944535d26660aad',
+                        'Content-Type': 'application/json'
+                    }
+
+                    const response = await fetch(`https://demo.campay.net/api/transaction/${id}/`, {
+                        method: "GET",
+                        // body: bodyContent,
+                        headers: myHeaders
+                    })
+                        .then(response => response.json())
+                        .then(result => {
+                            console.log("result", result);
+                            return result;
+                        })
+                        .catch(error => {
+                            console.log('error', error)
+                            return {
+                                success: false,
+                                status: "FAILED",
+                            };
+                        });
+                    return response
+                } catch (err) {
+                    console.log(err);
+                    return {
+                        success: false,
+                        status: 'FAILED',
+                    };
+                }
+            }
 
 
-            // const headersList = {
-            //     "Accept": "application/json",
-            //     // "Content-Type": "application/json",
-            //     "X-MeSomb-Application": process.env.MESOMB_APPLICATION_KEY,
-            //     "X-MeSomb-OperationMode": "asynchronous",
-            //     "X-MeSomb-TrxID": "Ander123",
-            //     // "X-Mesomb-Nonce": "8fd90ffs903if0394ls",
-            //     'x-mesomb-date': String(date.getTime()),
-            //     'x-mesomb-nonce': RandomGenerator.nonce(),
-            //     'Content-Type': 'application/json',
-            //     // 'X-MeSomb-Application': this.applicationKey,
-            //     // 'X-MeSomb-OperationMode': mode,
-            // };
+
+
             const headersList = {
-                'x-mesomb-date': '1709648831992',
-                'x-mesomb-nonce': '',
-                'Content-Type': 'application/json',
-                'X-MeSomb-Application': 'a0349a77eaee3156fea5c90a60c6ffe36928864f',
-                'X-MeSomb-OperationMode': 'asynchronous',
-                'Authorization': 'HMAC-SHA1 Credential=6cb46a23-5e19-4d89-8f3f-bd0e0ae102ce/202425/payment/mesomb_request, SignedHeaders=host;x-mesomb-date;x-mesomb-nonce, Signature=f3f14148337ee604567030ecde940a03b80e813a'
+                'Authorization': 'Token c41627139421ae9347ee7f8b0944535d26660aad',
+                'Content-Type': 'application/json'
             }
 
             const bodyContent = JSON.stringify({
-                "amount": 100,
-                "payer": phone,
-                "fees": true,
-                "service": payment,
-                "country": "CM",
-                "currency": "XAF"
+                "amount": "5",
+                "from": "237652156526",
+                // "from": "237659035317",
+                "description": "Test",
+                "external_reference": ""
             });
 
             try {
-                const response = await fetch("https://mesomb.hachther.com/api/v1.1/payment/collect/", {
+                const response = await fetch("https://demo.campay.net/api/collect/", {
                     method: "POST",
                     body: bodyContent,
                     headers: headersList
                 });
                 const paymentStatusResponse = await response.json();
                 console.log(paymentStatusResponse)
-                return res.status(200).json({
-                    message: "you voted have be accepted",
-                    status: paymentStatusResponse
-                });
-                // Enhanced: Return More Informative Data
-                // return {
-                //     success: true,
-                //     status: paymentStatusResponse.data.status,
-                //     data: paymentStatusResponse.data // Include other available details  
-                // };
+                let transID = paymentStatusResponse.reference
+                let attempts = 0; // Initialize attempts counter outside the interval
+                let maxAttempts = 20; // Set maximum attempts
+
+                const intervalId = setInterval(async () => {
+                    attempts++;
+                    console.log("time to do Num:", attempts)
+                    if (attempts > maxAttempts) {
+                        clearInterval(intervalId)
+                        return res.status(400).json({ message: 'Transaction Failed', statusTrans: true });
+                    }
+                    let payResponse = await attemptPayment(transID);
+                    if (payResponse) {
+                        console.log("payResponse", attempts, " ", payResponse.status)
+                        let status = payResponse.status
+                        if (status === 'FAILED') {
+                            clearInterval(intervalId)
+                            return res.status(200).json({
+                                message: payResponse.reason,
+                                // payResponse: payResponse,
+                                statusTrans: true
+                            });
+                        }
+                        if (status === 'SUCCESSFUL') {
+                            clearInterval(intervalId)
+                            console.log("payResponse", payResponse)
+                            return res.status(200).json({ 
+                                message: "accept successful",
+                                statusTrans: payResponse
+                             });
+                        }
+                    }
+                }, 5000);
+                console.log("intervalId", intervalId);
+                return res.status(200).json({ statusTrans: intervalId });
             } catch (error) {
                 console.error("Error polling payment status:", error);
                 return {
@@ -519,30 +553,15 @@ exports.VotesNTimes = async (req, res) => {
             }
 
 
-            setTimeout(async () => {
-                if (response.isTransactionSuccess()) {
-                    voters.TransactionId = response.data.pk;
-                    voters.voteAt = response.data.ts;
-                    voters.phone = response.data.b_party;
-                    await voters.save()
-                        .then(async respond => {
-                            console.log(respond)
-                            return res.status(200).json({ message: "you voted have be accepted", status: true });
-                        })
-                        .catch(err => {
-                            console.log(err);
-                            return res.status(409).json({ message: 'check you connection', statusCon: true });
-                        })
-                } else {
-                    return res.status(409).json({ message: 'Transaction Failed', statusTrans: true });
-                }
-            }, 20000);
+            // setTimeout(async () => {
+
+            // }, 20000);
         } catch (e) {
             console.log(e)
             if (e.code)
-                return res.status(409).json({ message: e.code, statusTrans: true });
+                return res.status(409).json({ error: e, message: e.code, statusTrans: true });
             else
-                return res.status(409).json({ message: "timed out error", statusTrans: true });
+                return res.status(409).json({ error: e, message: "timed out error", statusTrans: true });
         }
 
         //             }

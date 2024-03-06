@@ -9,88 +9,45 @@ const voterRoutes = require('./src/routes/voter.routes.js')
 const candidateRoutes = require('./src/routes/candidate.routes.js')
 const jwt = require('jsonwebtoken')
 const adminModel = require('./src/models/Admin.js')
+const Voter = require("./src/models/voter");
 const Admin = require('./src/models/Admin.js')
-const { PaymentOperation, RandomGenerator } = require('./mesomb');
+// const { PaymentOperation, RandomGenerator } = require('./payment/mesomb');
+const Election = require('./src/models/Election.js')
+const { v4: uuidv4 } = require('uuid');
+
 
 var app = express();
+
+// const allowedOrigins = [
+//     'http://localhost:3000', // Localhost for development
+//     'localhost:5000', // Localhost for development
+//     // 'https://web.campusiai.com',   // Replace with your production domain
+//     // 'bk.campusiai.com',   // Replace with your production domain
+// ];
+
+// CORS options
+// const corsOptions = {
+//     origin: function (origin, callback) {
+//         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+//             callback(null, true);
+//         } else {
+//             callback(new Error('Not allowed by CORS'));
+//         }
+//     },
+//     methods: ["GET", "POST", "DELETE", "PATCH", "PUT"]
+// };
+// app.use(cors(corsOptions));
+// app.use(cors({
+//     origin: '*', // Specific allowed origin
+//     // origin: 'https://www.example.com', // Specific allowed origin
+//     // Other options for methods, headers, etc.
+// }));
 app.use(cors())
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 
-const DepositeMoney = async () => {
-
-    const payment = new PaymentOperation({
-        applicationKey: process.env.MESOMB_APPLICATION_KEY,
-        accessKey: process.env.MESOMB_ACCESS_KEY,
-        secretKey: process.env.MESOMB_SECRET_KEY
-    });
-    const response = await payment.makeDeposit({
-        amount: 50,
-        service: 'MTN',
-        receiver: '652156526',
-        nonce: RandomGenerator.nonce()
-    });
-    console.log(response.isOperationSuccess());
-    console.log(response.isTransactionSuccess());
-}
-
-const collectMoney = async () => {
-    const payment = new PaymentOperation({
-        applicationKey: process.env.MESOMB_APPLICATION_KEY,
-        accessKey: process.env.MESOMB_ACCESS_KEY,
-        secretKey: process.env.MESOMB_SECRET_KEY
-    });
-    console.log("collect money 1")
-    try {
-        // console.log();
-        // const application = await payment.getStatus();
-        // console.log(application);
-        const response = await payment.makeCollect({
-            amount: 10,
-            service: 'MTN',
-            payer: '652156526',
-            nonce: RandomGenerator.nonce()
-        })
-        console.log("collect money 2")
-        console.log(response);
-        console.log(response.isTransactionSuccess());
-
-        
-    } catch (e) {
-        console.log("collect money 3 errr", e)
-    }
-}
-
-const pollTransactionStatus = async (payment, transactionId) => {
-    let transactionStatus;
-
-    while (true) {
-        try {
-            const pollingResponse = await payment.getTransactionStatus(transactionId);
-            transactionStatus = pollingResponse.getTransactionStatus();
-
-            // Handle the transaction status accordingly
-            if (transactionStatus === 'completed') {
-                console.log('Transaction completed');
-                break;
-            } else if (transactionStatus === 'failed') {
-                console.log('Transaction failed');
-                break;
-            }
-
-            // Sleep for a certain period before making the next polling request
-            await sleep(3000); // Adjust the polling interval as needed
-        } catch (e) {
-            console.log('Error occurred during transaction status polling:', e);
-            break;
-        }
-    }
-};
-
 // Utility function for sleeping
-const sleep = (ms) => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-};
+
 let url = "mongodb+srv://iai-sms:1nNl4MMt6gygBsYz@cluster0.sbmrul9.mongodb.net/comel"
 // let url = "mongodb+srv://AndersonKamsong:Ander39@@@cluster0.9rlip3r.mongodb.net/"
 // let url = "mongodb://127.0.0.1:27017/comel"
@@ -106,7 +63,87 @@ mongoose.connect(url)
 app.get("/", (req, res) => {
     return res.send("Welcome to comel backend")
 })
+app.post("/api/payment", async (req, res) => {
+    let {
+        phone,
+        candidate,
+        election
+    } = req.body
+    // const elections = await Election.findOne({ _id: election });
+    // if (elections) {
+    //     if (elections.status !== 'END') {
+    //         if (elections.status !== 'READY') {
+                const headersList = {
+                    'Authorization': 'Token c41627139421ae9347ee7f8b0944535d26660aad',
+                    'Content-Type': 'application/json'
+                }
+                const bodyContent = JSON.stringify({
+                    "amount": "5",
+                    // "from": "237659035317",
+                    // "from": "237673962005",
+                    "from": phone,
+                    // "from": "237652156526",
+                    "description": "Paying to voted" + candidate,
+                    "external_reference": uuidv4()
+                });
+                try {
+                    const response = await fetch("https://demo.campay.net/api/collect/", {
+                        method: "POST",
+                        body: bodyContent,
+                        headers: headersList
+                    });
+                    const paymentStatusResponse = await response.json();
+                    console.log("paymentStatusResponse", paymentStatusResponse)
+                    return res.status(200).json(paymentStatusResponse)
 
+                } catch (error) {
+                    console.error("Error initialing payment:", error);
+                    return res.status(400).send({ message: "Transaction failed please start back", statusError: true })
+                }
+
+    //         } else {
+    //             return res.status(400).json({ message: 'Elections not yet start', statusError: true });
+    //         }
+    //     } else {
+    //         return res.status(400).json({ message: 'Elections ended', statusError: true });
+    //     }
+    // } else {
+    //     return res.status(400).json({ message: 'Elections ended', statusError: true });
+    // }
+})
+app.put("/api/verify/:id", async (req, res) => {
+    let {
+        phone,
+        payment,
+        candidate,
+        election
+    } = req.body
+    const headersList = {
+        'Authorization': 'Token c41627139421ae9347ee7f8b0944535d26660aad',
+        'Content-Type': 'application/json'
+    }
+    try {
+        const response = await fetch(`https://demo.campay.net/api/transaction/${req.params.id}/`, {
+            method: "GET",
+            headers: headersList
+        })
+        const paymentStatusResponse = await response.json();
+        if (paymentStatusResponse.status === "SUCCESSFUL") {
+            console.log(req.body);
+            const voters = new Voter({
+                voterId: paymentStatusResponse.external_reference,
+                election: election,
+                candidate: candidate,
+                TransactionId: paymentStatusResponse.reference,
+            })
+            await voters.save();
+        }
+        return res.status(200).json(paymentStatusResponse)
+    } catch (error) {
+        console.error("Error polling payment status:", error);
+        return res.status(500).json({ message: "Server error" })
+    }
+})
 app.use("/api/election", electionRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/voter', voterRoutes)
@@ -201,50 +238,48 @@ app.get("*", (req, res) => {
 
 let server = app.listen(5000, async () => {
     console.log("Server running on port 5000");
-    // const headersList = {
-    //     'x-mesomb-date': '1709648831992',
-    //     'x-mesomb-nonce': '',
-    //     'Content-Type': 'application/json',
-    //     'X-MeSomb-Application': 'a0349a77eaee3156fea5c90a60c6ffe36928864f',
-    //     'X-MeSomb-OperationMode': 'asynchronous',
-    //     'Authorization': 'HMAC-SHA1 Credential=6cb46a23-5e19-4d89-8f3f-bd0e0ae102ce/202425/payment/mesomb_request, SignedHeaders=host;x-mesomb-date;x-mesomb-nonce, Signature=f3f14148337ee604567030ecde940a03b80e813a'
-    // }
-
-    // const bodyContent = JSON.stringify({
-    //     "amount": 30,
-    //     "payer": "652156526",
-    //     "fees": true,
-    //     "service": "MTN",
-    //     "country": "CM",
-    //     "currency": "XAF"
-    // });
-
-    // try {
-    //     const response = await fetch("https://mesomb.hachther.com/api/v1.1/payment/collect/", {
-    //         method: "POST",
-    //         body: bodyContent,
-    //         headers: headersList
-    //     });
-    //     console.log("response",response);
-    //     const paymentStatusResponse = await response.json();
-    //     console.log("paymentStatusResponse",paymentStatusResponse);
-    //     // return res.status(200).json({
-    //     //     message: "you voted have be accepted",
-    //     //     status: paymentStatusResponse
-    //     // });
-    //     // Enhanced: Return More Informative Data
-    //     // return {
-    //     //     success: true,
-    //     //     status: paymentStatusResponse.data.status,
-    //     //     data: paymentStatusResponse.data // Include other available details  
-    //     // };
-    // } catch (error) {
-    //     console.error("Error polling payment status test:", error);
-    //     return {
-    //         success: false,
-    //         error: error.message // Or a custom error code if relevant  
-    //     };
-    // }
-    await collectMoney();
+    // await collectMoney();
     // await DepositeMoney();
 })
+// const serverio = new Server(server, {
+//     maxHttpBufferSize: 1e8,
+//     cors: corsOptions
+// });
+// serverio.on('connection', (socket) => {
+//     socket.on('paymentStatusBack', async (data) => {
+//         // socket.emit('updateCandidateMarkFrontError', data);
+//         try {
+//             var myHeaders = {
+//                 'Authorization': 'Token c41627139421ae9347ee7f8b0944535d26660aad',
+//                 'Content-Type': 'application/json'
+//             }
+
+//             const response = await fetch(`https://demo.campay.net/api/transaction/${data.transId}/`, {
+//                 method: "GET",
+//                 // body: bodyContent,
+//                 headers: myHeaders
+//             })
+//                 .then(response => response.json())
+//                 .then(result => {
+//                     console.log("result", result);
+//                     return result;
+//                 })
+//                 .catch(error => {
+//                     console.log('error', error)
+//                     return {
+//                         success: false,
+//                         status: "FAILED",
+//                     };
+//                 });
+//             console.log(response);
+//         } catch (err) {
+//             // console.log("error", err);
+//             // console.log("error23");
+//             socket.emit('paymentFailed', data);
+//         }
+
+//     });
+//     socket.on('disconnect', () => {
+//         console.log('User disconnected');
+//     });
+// })
