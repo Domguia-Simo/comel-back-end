@@ -11,7 +11,6 @@ const jwt = require('jsonwebtoken')
 const adminModel = require('./src/models/Admin.js')
 const Voter = require("./src/models/voter");
 const Admin = require('./src/models/Admin.js')
-// const { PaymentOperation, RandomGenerator } = require('./payment/mesomb');
 const Election = require('./src/models/Election.js')
 const { v4: uuidv4 } = require('uuid');
 
@@ -48,9 +47,7 @@ app.use(bodyParser.json())
 
 // Utility function for sleeping
 
-let url = "mongodb+srv://iai-sms:1nNl4MMt6gygBsYz@cluster0.sbmrul9.mongodb.net/comel"
-// let url = "mongodb+srv://AndersonKamsong:Ander39@@@cluster0.9rlip3r.mongodb.net/"
-// let url = "mongodb://127.0.0.1:27017/comel"
+let url = "mongodb+srv://anderson:Ander123@cluster0.a8nau1r.mongodb.net/E-voting"
 
 mongoose.connect(url)
     .then((con) => {
@@ -69,10 +66,10 @@ app.post("/api/payment", async (req, res) => {
         candidate,
         election
     } = req.body
-    // const elections = await Election.findOne({ _id: election });
-    // if (elections) {
-    //     if (elections.status !== 'END') {
-    //         if (elections.status !== 'READY') {
+    const elections = await Election.findOne({ _id: election });
+    if (elections) {
+        if (elections.status !== 'END') {
+            if (elections.status !== 'READY') {
                 const headersList = {
                     'Authorization': 'Token c41627139421ae9347ee7f8b0944535d26660aad',
                     'Content-Type': 'application/json'
@@ -101,15 +98,15 @@ app.post("/api/payment", async (req, res) => {
                     return res.status(400).send({ message: "Transaction failed please start back", statusError: true })
                 }
 
-    //         } else {
-    //             return res.status(400).json({ message: 'Elections not yet start', statusError: true });
-    //         }
-    //     } else {
-    //         return res.status(400).json({ message: 'Elections ended', statusError: true });
-    //     }
-    // } else {
-    //     return res.status(400).json({ message: 'Elections ended', statusError: true });
-    // }
+            } else {
+                return res.status(400).json({ message: 'Elections not yet start', statusError: true });
+            }
+        } else {
+            return res.status(400).json({ message: 'Elections ended', statusError: true });
+        }
+    } else {
+        return res.status(400).json({ message: 'Elections ended', statusError: true });
+    }
 })
 app.put("/api/verify/:id", async (req, res) => {
     let {
