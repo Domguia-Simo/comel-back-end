@@ -13,39 +13,34 @@ const Voter = require("./src/models/voter");
 const Admin = require('./src/models/Admin.js')
 const Election = require('./src/models/Election.js')
 const { v4: uuidv4 } = require('uuid');
+const path = require('path')
+const process = require('process');
 
+const cwd = process.cwd();
 
 var app = express();
 
-// const allowedOrigins = [
-//     'http://localhost:3000', // Localhost for development
-//     'localhost:5000', // Localhost for development
-//     // 'https://web.campusiai.com',   // Replace with your production domain
-//     // 'bk.campusiai.com',   // Replace with your production domain
-// ];
+const allowedOrigins = [
+    'http://localhost:3000', // Localhost for development
+    'localhost:5000', // Localhost for development
+    'https://iai-miss-master-election.vercel.app',   // Replace with your production domain
+    'https://iai-miss-master-bk.vercel.app',   // Replace with your production domain
+];
 
 // CORS options
-// const corsOptions = {
-//     origin: function (origin, callback) {
-//         if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error('Not allowed by CORS'));
-//         }
-//     },
-//     methods: ["GET", "POST", "DELETE", "PATCH", "PUT"]
-// };
-// app.use(cors(corsOptions));
-// app.use(cors({
-//     origin: '*', // Specific allowed origin
-//     // origin: 'https://www.example.com', // Specific allowed origin
-//     // Other options for methods, headers, etc.
-// }));
-app.use(cors())
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ["GET", "POST", "DELETE", "PATCH", "PUT"]
+};
+app.use(cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
-
-// Utility function for sleeping
 
 let url = "mongodb+srv://anderson:Ander123@cluster0.a8nau1r.mongodb.net/E-voting"
 
@@ -60,6 +55,8 @@ mongoose.connect(url)
 app.get("/", (req, res) => {
     return res.send("Welcome to comel backend")
 })
+app.use("/images", express.static(path.join(cwd, 'CandidatePhoto')));
+
 app.post("/api/payment", async (req, res) => {
     let {
         phone,
@@ -80,7 +77,7 @@ app.post("/api/payment", async (req, res) => {
                     // "from": "237673962005",
                     "from": phone,
                     // "from": "237652156526",
-                    "description": "Paying to voted" + candidate,
+                    "description": "Paying to voted " + candidate,
                     "external_reference": uuidv4()
                 });
                 try {
