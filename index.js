@@ -72,7 +72,7 @@ app.post("/api/payment", async (req, res) => {
                     'Content-Type': 'application/json'
                 }
                 const bodyContent = JSON.stringify({
-                    "amount": "5",
+                    "amount": "100",
                     // "from": "237659035317",
                     // "from": "237673962005",
                     "from": phone,
